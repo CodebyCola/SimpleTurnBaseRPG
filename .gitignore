@@ -1,0 +1,22 @@
+
+# Maven
+/target/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+
+# Database (optional)
+*.db
+
+# Config (optional)
+config.properties
