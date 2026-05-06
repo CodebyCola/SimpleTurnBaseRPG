@@ -13,5 +13,6 @@ public class Potion {
     
     public Potion(String potionName) {
         this.potionName = potionName;
+        System.out.println("PUNTEN");
     }
 }
