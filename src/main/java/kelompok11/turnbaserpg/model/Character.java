@@ -9,7 +9,7 @@ package kelompok11.turnbaserpg.model;
  * @author Pongo
  */
 public abstract class Character {
-    
+
     private String characterName;
     private int characterHP;
     private int attackPower;
@@ -37,14 +37,16 @@ public abstract class Character {
     public void setCharacterHP(int characterHP) {
         this.characterHP = characterHP;
     }
-    
+
     public Character(String characterName) {
         this.characterName = characterName;
         this.characterHP = 100;
         this.attackPower = 10;
     }
-    
+
     public abstract int attack();
+
     public abstract void takeDamage(int damage);
+
     public abstract boolean isAlive();
 }

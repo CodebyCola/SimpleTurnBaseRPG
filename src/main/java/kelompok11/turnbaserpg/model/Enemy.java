@@ -8,25 +8,29 @@ package kelompok11.turnbaserpg.model;
  *
  * @author Pongo
  */
-public class Enemy extends Character{
-     
+public class Enemy extends Character {
+
     public Enemy(String characterName) {
         super(characterName);
     }
 
     @Override
     public int attack() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return getAttackPower();
     }
 
     @Override
     public void takeDamage(int attackDamage) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        int hpNow = getCharacterHP() - attackDamage;
+        if (hpNow < 0) {
+            hpNow = 0;
+        }
+        setCharacterHP(hpNow);
     }
 
     @Override
     public boolean isAlive() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        return getCharacterHP() > 0;
     }
-     
+
 }

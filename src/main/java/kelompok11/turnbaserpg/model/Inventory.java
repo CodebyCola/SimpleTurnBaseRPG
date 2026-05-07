@@ -4,10 +4,22 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import java.util.List;
+
 /**
  *
  * @author Pongo
  */
 public class Inventory {
-    
+
+    private List<Item> items;
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(Item item) {
+        this.items.add(item);
+    }
+
 }
