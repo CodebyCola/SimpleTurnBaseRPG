@@ -4,6 +4,8 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import kelompok11.turnbaserpg.enums.Role;
+
 /**
  *
  * @author Pongo
@@ -12,6 +14,9 @@ public class Player extends Character {
 
     private int playerLevel;
     private float playerExp;
+    private Role role;
+    private Inventory inventory;
+    
 
     public Player(String characterName) {
         super(characterName);
