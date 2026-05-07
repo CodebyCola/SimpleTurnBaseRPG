@@ -25,7 +25,7 @@ public class GameConstants {
 
         public static final int INITIAL_HP = 120;
         public static final int INITIAL_ATK = 15;
-        public static final int INITIAL_DEF = 12;
+        public static final int INITIAL_DEF = 15;
         public static final int INITIAL_MAGIC = 5;
         public static final int INITIAL_MANA = 30;
     }
@@ -44,7 +44,7 @@ public class GameConstants {
     public static final class ArcherStats {
 
         public static final int INITIAL_HP = 90;
-        public static final int INITIAL_ATK = 20;
+        public static final int INITIAL_ATK = 25;
         public static final int INITIAL_DEF = 8;
         public static final int INITIAL_MAGIC = 10;
         public static final int INITIAL_MANA = 50;
