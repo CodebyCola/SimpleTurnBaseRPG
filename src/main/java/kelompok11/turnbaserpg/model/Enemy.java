@@ -4,29 +4,27 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import kelompok11.turnbaserpg.utils.GameConstants;
+
 /**
  *
  * @author Pongo
  */
-public class Enemy extends Character{
-     
+public class Enemy extends Character {
+
+    // Default stats for enemy
     public Enemy(String characterName) {
-        super(characterName);
+        super(characterName, new Stats(
+                GameConstants.BASE_ENEMY_HP,
+                GameConstants.BASE_ENEMY_ATK,
+                GameConstants.BASE_ENEMY_DEF,
+                0, // Magic
+                0 // Mana
+        ));
     }
 
-    @Override
-    public int attack() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public void takeDamage(int damage) {
+        stats.takeDamage(damage);
     }
 
-    @Override
-    public void takeDamage(int attackDamage) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    @Override
-    public boolean isAlive() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-     
 }

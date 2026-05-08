@@ -9,42 +9,32 @@ package kelompok11.turnbaserpg.model;
  * @author Pongo
  */
 public abstract class Character {
-    
-    private String characterName;
-    private int characterHP;
-    private int attackPower;
 
-    public int getAttackPower() {
-        return attackPower;
-    }
-
-    public void setAttackPower(int attackPower) {
-        this.attackPower = attackPower;
-    }
+    protected String characterName;
+    protected Stats stats;
 
     public String getCharacterName() {
         return characterName;
     }
 
-    public void setCharacterName(String characterName) {
-        this.characterName = characterName;
+    public Stats getStats() {
+        return stats;
     }
 
-    public int getCharacterHP() {
-        return characterHP;
+    public boolean isAlive() {
+        return stats.getCurrentHP() > 0;
     }
 
-    public void setCharacterHP(int characterHP) {
-        this.characterHP = characterHP;
-    }
-    
-    public Character(String characterName) {
+    public Character(String characterName, Stats stats) {
         this.characterName = characterName;
-        this.characterHP = 100;
-        this.attackPower = 10;
+        this.stats = stats;
     }
-    
-    public abstract int attack();
-    public abstract void takeDamage(int damage);
-    public abstract boolean isAlive();
+
+    public void takeDamage(int damage) {
+        stats.takeDamage(damage);
+    }
+
+    public void heal(int amount) {
+        stats.heal(amount);
+    }
 }
