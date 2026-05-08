@@ -18,6 +18,7 @@ public class GameConstants {
     public static final int INITIAL_EXP_REQUIRED = 500;
     public static final double EXP_SCALING_MULTIPLIER = 1.2;
     public static final int INITIAL_GOLD = 100;
+    public static final int DEFAULT_LEVEL = 1;
 
 //    Character role initial stats
 //    Warrior Stats
@@ -111,7 +112,9 @@ public class GameConstants {
 
 //    Cooldown Constants
     public static final int SKILL_COOLDOWN_DEFAULT = 1;
+    public static final int SKILL_COOLDOWN_MEDIUM = 2;
     public static final int SKILL_COOLDOWN_HEAVY = 3;
+    public static final int SKILL_COOLDOWN_ULTIMATE = 5;
 
 //    Inventory & Equipments Constants
     public static final int MAX_INVENTORY_SLOT = 30;

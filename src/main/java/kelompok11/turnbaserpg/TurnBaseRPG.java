@@ -12,14 +12,6 @@ import kelompok11.turnbaserpg.model.Player;
 public class TurnBaseRPG {
 
     public static void main(String[] args) {
-        Player p = new Player("Hero");
-        p.setAttackPower(20);
-
-        System.out.println("HP awal: " + p.getCharacterHP());
-
-        p.takeDamage(p.attack());
-
-        System.out.println("HP setelah kena damage: " + p.getCharacterHP());
-        System.out.println("Masih hidup? " + p.isAlive());
+        
     }
 }
