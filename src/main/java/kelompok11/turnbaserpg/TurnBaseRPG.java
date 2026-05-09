@@ -4,6 +4,7 @@
 package kelompok11.turnbaserpg;
 
 import kelompok11.turnbaserpg.model.Player;
+import kelompok11.turnbaserpg.game.*;
 
 /**
  *
@@ -12,6 +13,7 @@ import kelompok11.turnbaserpg.model.Player;
 public class TurnBaseRPG {
 
     public static void main(String[] args) {
-        
+        GameManager gameManager = new GameManager();
+        gameManager.startNewGame();
     }
 }

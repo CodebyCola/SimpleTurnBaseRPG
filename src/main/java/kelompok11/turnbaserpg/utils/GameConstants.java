@@ -26,9 +26,11 @@ public class GameConstants {
 
         public static final int INITIAL_HP = 120;
         public static final int INITIAL_ATK = 15;
-        public static final int INITIAL_DEF = 15;
+        public static final int INITIAL_DEF = 30;
         public static final int INITIAL_MAGIC = 5;
         public static final int INITIAL_MANA = 30;
+        public static final int LEVEL_UP_HP_BONUS = 30;
+        public static final int LEVEL_UP_DEF_BONUS = 10;
     }
 
 //    Mage Stats
@@ -39,6 +41,8 @@ public class GameConstants {
         public static final int INITIAL_DEF = 5;
         public static final int INITIAL_MAGIC = 30;
         public static final int INITIAL_MANA = 70;
+        public static final int LEVEL_UP_MAGIC_BONUS = 5;
+        public static final int LEVEL_UP_MANA_BONUS = 15;
     }
 
 //    Archer Stats
@@ -49,6 +53,9 @@ public class GameConstants {
         public static final int INITIAL_DEF = 8;
         public static final int INITIAL_MAGIC = 10;
         public static final int INITIAL_MANA = 50;
+        public static final int LEVEL_UP_ATK_BONUS = 8;
+        public static final int LEVEL_UP_DEF_BONIS = 3;
+        public static final int LEVEL_UP_HP_BONUS = 10;
     }
 
 //    Level up stats bonus
@@ -64,6 +71,8 @@ public class GameConstants {
     public static final int CRITICAL_HIT_MULTIPLIER = 2;
     public static final double PLAYER_ATTACK_VARIANCE = 0.1; // in percentage
     public static final double ENEMY_ATTACK_VARIANCE = 0.2; // in percentage
+    public static final double ENEMY_SKILL_MIN_MULTIPLIER = 1.1;
+    public static final double ENEMY_SKILL_MAX_MULTIPLIER = 2.0;
 
 //    Dungeon System Constants
     public static final int MAX_FLOOR = 100;

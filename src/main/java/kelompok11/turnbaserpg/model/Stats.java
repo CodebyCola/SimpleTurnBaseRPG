@@ -4,6 +4,11 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import kelompok11.turnbaserpg.enums.BuffType;
+//import static kelompok11.turnbaserpg.enums.BuffType.ATTACK;
+//import static kelompok11.turnbaserpg.enums.BuffType.DEFENSE;
+//import static kelompok11.turnbaserpg.enums.BuffType.MAGIC;
+//import static kelompok11.turnbaserpg.enums.BuffType.MANA;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -17,10 +22,13 @@ public class Stats {
     private int currentHP;
 
     private int baseAttack;
+    private int bonusAttack;
 
     private int baseDefense;
+    private int bonusDefense;
 
     private int baseMagic;
+    private int bonusMagic;
 
     private int baseMana;
     private int bonusMana;
@@ -58,6 +66,10 @@ public class Stats {
         return baseMana;
     }
 
+    public int getTotalAttack() {
+        return baseAttack + bonusAttack;
+    }
+
     public Stats(
             int maxHP,
             int attack,
@@ -73,6 +85,7 @@ public class Stats {
         this.baseDefense = defense;
         this.baseMagic = magic;
         this.baseMana = mana;
+        currentMana = this.baseMana;
     }
 
 //    Battle System
@@ -105,6 +118,51 @@ public class Stats {
         currentHP = newHP;
     }
 
+    public void applyBuff(int effectValue, BuffType type) {
+        switch (type) {
+
+            case ATTACK:
+                bonusAttack += effectValue;
+                break;
+
+            case DEFENSE:
+                bonusDefense += effectValue;
+                break;
+
+            case MAGIC:
+                bonusMagic += effectValue;
+                break;
+
+            case MANA:
+                bonusMana += effectValue;
+                break;
+        }
+
+    }
+
+    public void removeBuff(int effectValue, BuffType type) {
+        switch (type) {
+            case ATTACK:
+                bonusAttack -= effectValue;
+                break;
+
+            case DEFENSE:
+                bonusDefense -= effectValue;
+
+                break;
+
+            case MAGIC:
+                bonusMagic -= effectValue;
+
+                break;
+
+            case MANA:
+                bonusMana -= effectValue;
+
+                break;
+        }
+    }
+
 //    Level up boost
     public void boostStats() {
         maxHP += GameConstants.LEVEL_UP_HP_BONUS;
@@ -113,5 +171,14 @@ public class Stats {
         baseDefense += GameConstants.LEVEL_UP_DEF_BONUS;
         baseMagic += GameConstants.LEVEL_UP_MAGIC_BONUS;
         baseMana += GameConstants.LEVEL_UP_MANA_BONUS;
+    }
+
+//    Stats detail
+    public void viewDetailStats() {
+        System.out.println("Hp : " + currentHP + " / " + maxHP);
+        System.out.println("Attack : " + baseAttack);
+        System.out.println("Defense : " + baseDefense);
+        System.out.println("Magic : " + baseMagic);
+        System.out.println("Mana : " + baseMana);
     }
 }

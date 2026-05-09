@@ -4,6 +4,7 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -23,8 +24,22 @@ public class Enemy extends Character {
         ));
     }
 
-    public void takeDamage(int damage) {
-        stats.takeDamage(damage);
+//    every turn
+    public int basicAttack() {
+        return stats.getBaseAttack();
+    }
+
+// every turn mod 3 == 0 (every 3 turn)    
+    public int skillAttack() {
+
+        double multiplier = ThreadLocalRandom.current().nextDouble(
+                        GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
+                        GameConstants.ENEMY_SKILL_MAX_MULTIPLIER);
+
+        int damage = (int) (stats.getBaseAttack() * multiplier);
+
+//        System.out.println("Critical multiplier: " + multiplier);
+        return damage;
     }
 
 }
