@@ -4,7 +4,10 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import java.util.ArrayList;
+import kelompok11.turnbaserpg.buff.Buff;
 import kelompok11.turnbaserpg.enums.*;
+import kelompok11.turnbaserpg.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -20,6 +23,8 @@ public class Player extends Character {
     private int currentFloor; // Lantai tempat player berada saat ini
     private int totalGold;
     private Inventory inventory;
+    private ArrayList<Skill> unlockedSkills;
+    private ArrayList<Buff> activeBuffs;
 
     public Player(String characterName, Role role) {
 
@@ -32,6 +37,21 @@ public class Player extends Character {
         totalGold = GameConstants.INITIAL_GOLD;
         inventory = new Inventory();
         maxExp = GameConstants.INITIAL_EXP_REQUIRED;
+        unlockedSkills = new ArrayList<>();
+        activeBuffs = new ArrayList<>();
+    }
+
+    public void getPlayerDetail() {
+        System.out.println("Character name : " + characterName);
+        System.out.println("Role : " + role.getDisplayName());
+        System.out.println("Level : " + level);
+        System.out.println("Exp : " + currentExp + " / " + maxExp);
+        System.out.println("Gold Currency : " + totalGold);
+
+    }
+
+    public void getStatsDetail() {
+        stats.viewDetailStats();
     }
 
     public int getLevel() {
@@ -55,7 +75,9 @@ public class Player extends Character {
     }
 
     public void setCurrentFloor(int currentFloor) {
-        this.currentFloor = currentFloor;
+        if (currentFloor > this.currentFloor) {
+            this.currentFloor = currentFloor;
+        }
     }
 
     public int getTotalGold() {
@@ -102,6 +124,10 @@ public class Player extends Character {
 
 //    Method untuk progress character
     public void levelUp() {
+        if (level >= GameConstants.MAX_LEVEL) {
+            return;
+        }
+
         level += 1;
         currentExp -= maxExp;
         maxExp *= GameConstants.EXP_SCALING_MULTIPLIER;
@@ -128,6 +154,35 @@ public class Player extends Character {
         } else {
             return false;
         }
+    }
+
+//    Method game system
+    public void unlockSkill(Skill skill) {
+        for (Skill unlockedSkill : unlockedSkills) {
+
+            if (unlockedSkill.getName().equals(skill.getName())) {
+                return;
+            }
+        }
+
+        unlockedSkills.add(skill);
+    }
+
+    public ArrayList<Skill> getUnlockedSkills() {
+        return unlockedSkills;
+    }
+
+    public void addBuff(Buff buff) {
+        if (activeBuffs.size() >= GameConstants.MAX_ACTIVE_BUFFS) {
+            return;
+        }
+
+        buff.use(this);
+        activeBuffs.add(buff);
+    }
+
+    public ArrayList<Buff> getActiveBuffs() {
+        return activeBuffs;
     }
 
 }

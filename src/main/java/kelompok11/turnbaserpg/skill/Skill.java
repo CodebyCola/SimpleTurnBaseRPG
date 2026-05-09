@@ -40,4 +40,11 @@ public abstract class Skill {
         // Masih mandek, perlu lanjutan untuk logic gimana menambahkan buff sementara ke total stat defense 
     }
 
+    public String getName() {
+        return name;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
 }
