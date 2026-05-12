@@ -4,10 +4,18 @@
  */
 package kelompok11.turnbaserpg.model;
 
+import java.util.ArrayList;
+import kelompok11.turnbaserpg.item.Item;
+
 /**
  *
  * @author Pongo
  */
 public class Inventory {
-    
+
+    private ArrayList<Item> items;
+
+    public Inventory() {
+        items = new ArrayList<>();
+    }
 }

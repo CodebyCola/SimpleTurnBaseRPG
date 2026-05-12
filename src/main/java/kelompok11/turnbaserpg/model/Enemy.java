@@ -24,17 +24,13 @@ public class Enemy extends Character {
         ));
     }
 
-//    every turn
-    public int basicAttack() {
-        return stats.getBaseAttack();
-    }
-
+   
 // every turn mod 3 == 0 (every 3 turn)    
     public int skillAttack() {
 
         double multiplier = ThreadLocalRandom.current().nextDouble(
-                        GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
-                        GameConstants.ENEMY_SKILL_MAX_MULTIPLIER);
+                GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
+                GameConstants.ENEMY_SKILL_MAX_MULTIPLIER);
 
         int damage = (int) (stats.getBaseAttack() * multiplier);
 
