@@ -19,6 +19,7 @@ public class GameConstants {
     public static final double EXP_SCALING_MULTIPLIER = 1.2;
     public static final int INITIAL_GOLD = 100;
     public static final int DEFAULT_LEVEL = 1;
+    public static final int DEFAULT_FLOOR = 1;
 
 //    Character role initial stats
 //    Warrior Stats
@@ -54,7 +55,7 @@ public class GameConstants {
         public static final int INITIAL_MAGIC = 10;
         public static final int INITIAL_MANA = 50;
         public static final int LEVEL_UP_ATK_BONUS = 8;
-        public static final int LEVEL_UP_DEF_BONIS = 3;
+        public static final int LEVEL_UP_DEF_BONUS = 3;
         public static final int LEVEL_UP_HP_BONUS = 10;
     }
 
@@ -85,17 +86,17 @@ public class GameConstants {
     public static final int BASE_ENEMY_HP = 50;
     public static final int ENEMY_HP_PER_LEVEL = 15;
     public static final int BASE_ENEMY_ATK = 10;
-    public static final int ENEMY_ATK_PER_LEVEL = 2;
+    public static final int ENEMY_ATK_PER_LEVEL = 5;
     public static final int BASE_ENEMY_DEF = 5;
-    public static final int ENEMY_DEF_PER_LEVEL = 1;
+    public static final int ENEMY_DEF_PER_LEVEL = 5;
 
 //    Rewards Scaling
     public static final int BASE_GOLD_REWARD = 100;
-    public static final int BASE_EXP_REWARD = 100;
+    public static final int BASE_EXP_REWARD = 50;
     public static final int EXP_SCALING_PER_LEVEL = 1;
     public static final int GOLD_SCALING_PER_LEVEL = 2;
 
-//    Skills & Buff Constants
+//    Skills Constants
     public static final int MAX_SKILL_SLOTS = 10;
     public static final int SKILL_UNLOCK_INTERVAL = 10; // New Skill unlocked every 10 floors
     public static final int MAX_ACTIVE_BUFFS = 5;
@@ -128,6 +129,11 @@ public class GameConstants {
 //    Inventory & Equipments Constants
     public static final int MAX_INVENTORY_SLOT = 30;
     public static final double LOOT_DROP_RATE = 0.4;
+    
+//    Consumable Constants
+    public static final int SMALL_POTION_VALUE = 10;
+    public static final int MEDIUM_POTION_VALUE = 25;
+    public static final int LARGE_POTION_VALUE = 50;
 
 //    Gacha Constants
     public static final int GACHA_SINGLE_COST = 500; // Gold

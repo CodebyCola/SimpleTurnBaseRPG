@@ -10,9 +10,9 @@ package kelompok11.turnbaserpg.enums;
  */
 public enum Difficulty {
     EASY("Easy", 1.0),
-    NORMAL("Normal", 1.1),
-    HARD("Hard", 1.2),
-    NIGHTMARE("Nightmare", 1.3);
+    NORMAL("Normal", 1.2),
+    HARD("Hard", 1.3),
+    NIGHTMARE("Nightmare", 1.5);
 
     private final String displayName;
     private final double statMultiplier;

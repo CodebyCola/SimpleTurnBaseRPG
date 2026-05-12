@@ -124,19 +124,36 @@ public class Player extends Character {
 
 //    Method untuk progress character
     public void levelUp() {
-        if (level >= GameConstants.MAX_LEVEL) {
+        if (this.level >= GameConstants.MAX_LEVEL) {
+            System.out.println("️Already at max level!");
             return;
         }
 
         level += 1;
         currentExp -= maxExp;
-        maxExp *= GameConstants.EXP_SCALING_MULTIPLIER;
+        maxExp = (int) (maxExp * GameConstants.EXP_SCALING_MULTIPLIER);
+
+        switch (role) {
+            case WARRIOR:
+                stats.increaseMaxHP(GameConstants.WarriorStats.LEVEL_UP_HP_BONUS);
+                stats.increaseDefense(GameConstants.WarriorStats.LEVEL_UP_DEF_BONUS);
+                break;
+            case MAGE:
+                stats.increaseMagic(GameConstants.MageStats.LEVEL_UP_MAGIC_BONUS);
+                stats.increaseMana(GameConstants.MageStats.LEVEL_UP_MANA_BONUS);
+                break;
+            case ARCHER:
+                stats.increaseAttack(GameConstants.ArcherStats.LEVEL_UP_ATK_BONUS);
+                stats.increaseDefense(GameConstants.ArcherStats.LEVEL_UP_DEF_BONUS);
+                stats.increaseMaxHP(GameConstants.ArcherStats.LEVEL_UP_HP_BONUS);
+                break;
+        }
         stats.boostStats();
     }
 
     public void gainExp(int exp) {
         currentExp += exp;
-        while (currentExp >= maxExp) {
+        while (currentExp >= maxExp && level < GameConstants.MAX_LEVEL) {
             levelUp();
         }
     }
@@ -184,5 +201,5 @@ public class Player extends Character {
     public ArrayList<Buff> getActiveBuffs() {
         return activeBuffs;
     }
-
+    
 }

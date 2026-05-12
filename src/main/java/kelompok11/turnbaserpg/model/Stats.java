@@ -5,6 +5,7 @@
 package kelompok11.turnbaserpg.model;
 
 import kelompok11.turnbaserpg.enums.BuffType;
+import kelompok11.turnbaserpg.enums.Role;
 //import static kelompok11.turnbaserpg.enums.BuffType.ATTACK;
 //import static kelompok11.turnbaserpg.enums.BuffType.DEFENSE;
 //import static kelompok11.turnbaserpg.enums.BuffType.MAGIC;
@@ -52,23 +53,41 @@ public class Stats {
 
     public int getBaseAttack() {
         return baseAttack;
+
+    }
+
+    public void setBaseAttack(int baseAttack) {
+        this.baseAttack = baseAttack;
     }
 
     public int getBaseMagic() {
         return baseMagic;
     }
 
+    public void setBaseMagic(int baseMagic) {
+        this.baseMagic = baseMagic;
+    }
+
     public int getBaseDefense() {
         return baseDefense;
+    }
+
+    public void setBaseDefense(int baseDefense) {
+        this.baseDefense = baseDefense;
     }
 
     public int getBaseMana() {
         return baseMana;
     }
 
-    public int getTotalAttack() {
-        return baseAttack + bonusAttack;
+    public void setBaseMana(int baseMana) {
+        this.baseMana = baseMana;
     }
+    
+    public int getTotalAttack() {
+        return (this.baseAttack + this.bonusAttack);
+    }
+    
 
     public Stats(
             int maxHP,
@@ -85,15 +104,15 @@ public class Stats {
         this.baseDefense = defense;
         this.baseMagic = magic;
         this.baseMana = mana;
-        currentMana = this.baseMana;
+        this.currentMana = this.baseMana;
     }
 
 //    Battle System
     public void takeDamage(int damage) {
         int finalDamage = damage * 100 / (100 + baseDefense);
 
-        if (finalDamage < 1) {
-            finalDamage = 1;
+        if (finalDamage < GameConstants.MIN_DAMAGE) {
+            finalDamage = GameConstants.MIN_DAMAGE;
         }
 
         currentHP -= finalDamage;
@@ -166,11 +185,33 @@ public class Stats {
 //    Level up boost
     public void boostStats() {
         maxHP += GameConstants.LEVEL_UP_HP_BONUS;
-        currentHP = maxHP;
+
         baseAttack += GameConstants.LEVEL_UP_ATK_BONUS;
         baseDefense += GameConstants.LEVEL_UP_DEF_BONUS;
         baseMagic += GameConstants.LEVEL_UP_MAGIC_BONUS;
         baseMana += GameConstants.LEVEL_UP_MANA_BONUS;
+
+        currentHP = maxHP; // Full hp reward for level up
+    }
+
+    public void increaseAttack(int amount) {
+        baseAttack += amount;
+    }
+
+    public void increaseMaxHP(int amount) {
+        maxHP += amount;
+    }
+
+    public void increaseDefense(int amount) {
+        baseDefense += amount;
+    }
+
+    public void increaseMagic(int amount) {
+        baseMagic += amount;
+    }
+
+    public void increaseMana(int amount) {
+        baseMana += amount;
     }
 
 //    Stats detail

@@ -14,6 +14,7 @@ import kelompok11.turnbaserpg.model.Player;
  */
 public class GameManager {
 
+    private DungeonSystem dungeon;
     Scanner input = new Scanner(System.in);
 
 //    public void loadGame()
@@ -41,9 +42,12 @@ public class GameManager {
                 break;
         }
 
-        Player p1 = new Player(characterName, role);
-        p1.getPlayerDetail();
-        p1.getStatsDetail();
+        Player player = new Player(characterName, role);
+
+        player.getPlayerDetail();
+        player.getStatsDetail();
+        dungeon = new DungeonSystem(player);
+        mainMenu();
 
     }
 
@@ -58,6 +62,7 @@ public class GameManager {
 
         switch (pilihanMenu) {
             case 1:
+                dungeon.attackDungeon();
                 break;
             case 2:
                 break;
