@@ -2,11 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.item.consumable;
+package kelompok11.turnbaserpg.model.item.consumable;
 
 import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
-import kelompok11.turnbaserpg.item.Item;
+import kelompok11.turnbaserpg.model.item.Item;
 import kelompok11.turnbaserpg.model.Character;
 
 /**
