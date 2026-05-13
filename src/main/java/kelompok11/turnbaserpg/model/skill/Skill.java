@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.skill;
+package kelompok11.turnbaserpg.model.skill;
 
 import kelompok11.turnbaserpg.enums.SkillType;
 import kelompok11.turnbaserpg.model.Character;

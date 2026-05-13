@@ -5,9 +5,9 @@
 package kelompok11.turnbaserpg.model;
 
 import java.util.ArrayList;
-import kelompok11.turnbaserpg.buff.Buff;
+import kelompok11.turnbaserpg.model.buff.Buff;
 import kelompok11.turnbaserpg.enums.*;
-import kelompok11.turnbaserpg.skill.Skill;
+import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**

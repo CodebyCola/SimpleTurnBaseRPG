@@ -10,7 +10,7 @@ import kelompok11.turnbaserpg.game.*;
  *
  * @author Pongo
  */
-public class TurnBaseRPG {
+public class Main {
 
     public static void main(String[] args) {
         GameManager gameManager = new GameManager();

@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.buff;
+package kelompok11.turnbaserpg.model.buff;
 
 import kelompok11.turnbaserpg.enums.BuffType;
 import kelompok11.turnbaserpg.model.Character;
@@ -11,13 +11,13 @@ import kelompok11.turnbaserpg.model.Character;
  *
  * @author Pongo
  */
-public class ManaBuff extends Buff {
+public class MagicBuff extends Buff {
 
     private int effectValue;
     private BuffType type;
 
-    public ManaBuff(int effectValue) {
-        super("Mana Buff", 3);
+    public MagicBuff(int effectValue) {
+        super("Magic Buff", 3);
         this.effectValue = effectValue;
     }
 

@@ -5,7 +5,7 @@
 package kelompok11.turnbaserpg.model;
 
 import java.util.ArrayList;
-import kelompok11.turnbaserpg.item.Item;
+import kelompok11.turnbaserpg.model.item.Item;
 
 /**
  *
