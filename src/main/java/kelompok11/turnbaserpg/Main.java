@@ -3,7 +3,7 @@
  */
 package kelompok11.turnbaserpg;
 
-import kelompok11.turnbaserpg.model.Player;
+import kelompok11.turnbaserpg.model.Character.Player;
 import kelompok11.turnbaserpg.game.*;
 
 /**

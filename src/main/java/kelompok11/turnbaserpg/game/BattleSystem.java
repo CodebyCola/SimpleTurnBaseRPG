@@ -5,8 +5,9 @@
 package kelompok11.turnbaserpg.game;
 
 import java.util.Scanner;
-import kelompok11.turnbaserpg.model.Enemy;
-import kelompok11.turnbaserpg.model.Player;
+import kelompok11.turnbaserpg.enums.BattleResult;
+import kelompok11.turnbaserpg.model.Character.Enemy;
+import kelompok11.turnbaserpg.model.Character.Player;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -30,7 +31,7 @@ public class BattleSystem {
 
     }
 
-    public boolean startBattle() {
+    public BattleResult startBattle() {
 
         while (player.isAlive() && enemy.isAlive() && !isEscaped) {
             System.out.println("Player HP : " + player.getStats().getCurrentHP());
@@ -61,7 +62,7 @@ public class BattleSystem {
 
             }
 
-            if (enemy.isAlive() == false) {
+            if (!enemy.isAlive()) {
                 player.gainExp(GameConstants.BASE_EXP_REWARD
                         * (player.getCurrentFloor() * GameConstants.EXP_SCALING_PER_LEVEL));
 
@@ -69,9 +70,10 @@ public class BattleSystem {
 
             turn++;
         }
+        // Reset temporary defense bonus
         player.getStats().setBaseDefense(player.getStats().getBaseDefense() - temporaryDefenseBonus);
 
-        return player.isAlive() && !isEscaped;
+        return determineResult();
     }
 
     public void move(int move) {
@@ -108,4 +110,15 @@ public class BattleSystem {
         }
 
     }
+
+    private BattleResult determineResult() {
+        if (!player.isAlive()) {
+            return BattleResult.LOSE;
+        } else if (isEscaped) {
+            return BattleResult.ESCAPED;
+        }
+
+        return BattleResult.WIN;
+    }
+
 }

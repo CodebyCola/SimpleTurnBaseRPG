@@ -5,7 +5,7 @@
 package kelompok11.turnbaserpg.model.skill;
 
 import kelompok11.turnbaserpg.enums.SkillType;
-import kelompok11.turnbaserpg.model.Character;
+import kelompok11.turnbaserpg.model.Character.Character;
 
 /**
  *
