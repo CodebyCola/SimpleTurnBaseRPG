@@ -7,7 +7,7 @@ package kelompok11.turnbaserpg.model.item.consumable;
 import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
 import kelompok11.turnbaserpg.model.item.Item;
-import kelompok11.turnbaserpg.model.Character;
+import kelompok11.turnbaserpg.model.Character.Character;
 
 /**
  *

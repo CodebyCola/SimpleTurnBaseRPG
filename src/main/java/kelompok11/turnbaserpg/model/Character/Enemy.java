@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.model;
+package kelompok11.turnbaserpg.model.Character;
 
+import kelompok11.turnbaserpg.model.Character.Character;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.utils.GameConstants;
 

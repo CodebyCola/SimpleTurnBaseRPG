@@ -4,7 +4,7 @@
  */
 package kelompok11.turnbaserpg.model.buff;
 import kelompok11.turnbaserpg.enums.BuffType;
-import kelompok11.turnbaserpg.model.Character;
+import kelompok11.turnbaserpg.model.Character.Character;
 /**
  *
  * @author Pongo

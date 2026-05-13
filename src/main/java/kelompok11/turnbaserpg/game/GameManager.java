@@ -6,7 +6,7 @@ package kelompok11.turnbaserpg.game;
 
 import java.util.Scanner;
 import kelompok11.turnbaserpg.enums.Role;
-import kelompok11.turnbaserpg.model.Player;
+import kelompok11.turnbaserpg.model.Character.Player;
 
 /**
  *

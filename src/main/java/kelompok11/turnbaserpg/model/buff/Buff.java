@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package kelompok11.turnbaserpg.model.buff;
-import kelompok11.turnbaserpg.model.Character;
+import kelompok11.turnbaserpg.model.Character.Character;
 
 /**
  *
