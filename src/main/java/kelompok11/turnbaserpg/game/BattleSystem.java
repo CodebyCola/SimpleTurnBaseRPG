@@ -8,6 +8,7 @@ import java.util.Scanner;
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.model.Character.Enemy;
 import kelompok11.turnbaserpg.model.Character.Player;
+import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -18,10 +19,11 @@ public class BattleSystem {
 
     private Player player;
     private Enemy enemy;
-    int turn = 1;
 
-    int temporaryDefenseBonus = 0;
-    boolean isEscaped = false;
+    private int enemyTurnCounter;
+    private boolean isEscaped = false;
+    private boolean playerTurn;
+    private boolean playerDefend = false;
 
     Scanner input = new Scanner(System.in);
 
@@ -32,86 +34,33 @@ public class BattleSystem {
     }
 
     public BattleResult startBattle() {
+        playerTurn = true;
+        enemyTurnCounter = 1;
 
-        while (player.isAlive() && enemy.isAlive() && !isEscaped) {
-            System.out.println("Player HP : " + player.getStats().getCurrentHP());
-            System.out.println("Enemy (" + enemy.getCharacterName() + ") HP : " + enemy.getStats().getCurrentHP());
+        while (enemy.isAlive() && !isEscaped && player.isAlive()) {
 
-            if (turn % 2 == 1) {
-                System.out.println("Turn : " + turn);
-                System.out.println("Choose your move :");
-                System.out.println("1. Basic Attack");
-                System.out.println("2. Use Skill");
-                System.out.println("3. Defend");
-                if (turn == 1) {
-                    System.out.println("4. Run (leave)");
+            if (playerTurn) {
+
+                playerTurn();
+                if (!enemy.isAlive()) {
+                    break;
                 }
-                int move = input.nextInt();
-                move(move);
+
+                player.updateBuffs();
+                player.updateSkillCooldowns();
+
             } else {
-                if (turn % 3 == 0) {
-                    int damage = enemy.skillAttack();
-                    player.takeDamage(damage);
-                    System.out.println("Player take " + damage + " damage");
-
-                } else {
-                    enemy.basicAttack(enemy, player);
-                    System.out.println("Player take "
-                            + enemy.getStats().getTotalAttack() + " ");
+                enemyTurn();
+                if (playerDefend) {
+                    player.setDefend(false);
+                    playerDefend = false;
                 }
-
             }
 
-            if (!enemy.isAlive()) {
-                player.gainExp(GameConstants.BASE_EXP_REWARD
-                        * (player.getCurrentFloor() * GameConstants.EXP_SCALING_PER_LEVEL));
+            playerTurn = !playerTurn;
 
-            }
-
-            turn++;
-        }
-        // Reset temporary defense bonus
-        player.getStats().setBaseDefense(player.getStats().getBaseDefense() - temporaryDefenseBonus);
-
-        return determineResult();
-    }
-
-    public void move(int move) {
-        switch (move) {
-            case 1 -> {
-                player.basicAttack(player, enemy);
-                System.out.println("Enemy take "
-                        + player.getStats().getTotalAttack() + " damage");
-            }
-
-            case 2 -> {
-//                Nanti ditambahin
-            }
-
-            case 3 -> {
-                temporaryDefenseBonus += 10;
-                player.getStats().increaseDefense(10);
-                System.out.println("Player increasing defense by 10");
-
-            }
-
-            case 4 -> {
-                if (turn == 1) {
-                    isEscaped = true;
-                } else {
-                    System.out.println("You can only leave in turn 1");
-                }
-
-            }
-
-            default -> {
-                System.out.println("Invalid move!");
-            }
         }
 
-    }
-
-    private BattleResult determineResult() {
         if (!player.isAlive()) {
             return BattleResult.LOSE;
         } else if (isEscaped) {
@@ -119,6 +68,120 @@ public class BattleSystem {
         }
 
         return BattleResult.WIN;
+    }
+
+    public void playerTurn() {
+        System.out.println("Player Turn");
+        System.out.println("HP : " + player.getStats().getCurrentHP());
+        boolean isValid = false;
+        int pil;
+
+        while (!isValid) {
+            System.out.println("Choose: ");
+            System.out.println("1. Basic Attack");
+            System.out.println("2. Defend");
+            System.out.println("3. Use Skill");
+            System.out.println("4. Inventory");
+            System.out.println("5. Escape (50% chance)");
+
+            System.out.println("Type number you choose :");
+            pil = input.nextInt();
+
+            switch (pil) {
+                case 1 -> {
+                    player.basicAttack(enemy);
+                    isValid = true;
+                }
+
+                case 2 -> {
+                    player.setDefend(true);
+                    playerDefend = true;
+                    isValid = true;
+
+                }
+
+                case 3 -> {
+                    if (player.getTotalUnlockedSkills() != 0) {
+                        if (useSkillMenu()) {
+                            isValid = true;
+                        }
+                    } else {
+                        System.out.println("No Skills available!");
+                    }
+                }
+
+                case 4 -> {
+
+                }
+
+                case 5 -> {
+                    if (Math.random() < 0.7) {
+                        System.out.println("You Escaped!");
+                        isEscaped = true;
+                    } else {
+                        System.out.println("Cannot escape!");
+                    }
+                    isValid = true;
+                }
+
+                default -> {
+                    System.out.println("Input tidak valid!");
+                }
+
+            }
+
+        }
+
+    }
+
+    public void enemyTurn() {
+        System.out.println("Enemy attack");
+        if (enemyTurnCounter % 3 == 0) {
+            enemy.skillAttack(player);
+        } else {
+            enemy.basicAttack(player);
+        }
+
+        enemyTurnCounter++;
+    }
+
+    public boolean useSkillMenu() {
+        if (player.getUnlockedSkills().isEmpty()) {
+            System.out.println("No skills available!");
+            return false;
+        }
+
+        System.out.println("=== Skill List ===");
+
+        for (int i = 0; i < player.getUnlockedSkills().size(); i++) {
+
+            Skill skill = player.getUnlockedSkills().get(i);
+
+            System.out.println(
+                    (i + 1) + ". "
+                    + skill.getName()
+                    + " | Mana: "
+                    + skill.getManaCost()
+                    + " | CD: "
+                    + skill.getCurrentCooldown()
+            );
+        }
+
+        System.out.println("Choose skill:");
+
+        int choice = input.nextInt();
+
+        if (choice < 1
+                || choice > player.getUnlockedSkills().size()) {
+
+            System.out.println("Invalid choice!");
+            return false;
+        }
+
+        Skill selectedSkill
+                = player.getUnlockedSkills().get(choice - 1);
+
+        return selectedSkill.cast(player, enemy);
     }
 
 }

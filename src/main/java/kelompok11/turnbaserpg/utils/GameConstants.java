@@ -70,10 +70,11 @@ public class GameConstants {
     public static final int MIN_DAMAGE = 1;
     public static final double BASE_CRITICAL_CHANCE = 0.2; // in percentage
     public static final int CRITICAL_HIT_MULTIPLIER = 2;
-    public static final double PLAYER_ATTACK_VARIANCE = 0.1; // in percentage
-    public static final double ENEMY_ATTACK_VARIANCE = 0.2; // in percentage
+//    public static final double PLAYER_ATTACK_VARIANCE = 0.1; // in percentage
+//    public static final double ENEMY_ATTACK_VARIANCE = 0.2; // in percentage
     public static final double ENEMY_SKILL_MIN_MULTIPLIER = 1.1;
     public static final double ENEMY_SKILL_MAX_MULTIPLIER = 2.0;
+    public static final int DEFEND_BONUS = 25;
 
 //    Dungeon System Constants
     public static final int MAX_FLOOR = 100;
@@ -97,7 +98,7 @@ public class GameConstants {
     public static final int GOLD_SCALING_PER_LEVEL = 2;
 
 //    Skills Constants
-    public static final int MAX_SKILL_SLOTS = 10;
+    public static final int MAX_SKILL_SLOTS = 11;
     public static final int SKILL_UNLOCK_INTERVAL = 10; // New Skill unlocked every 10 floors
     public static final int MAX_ACTIVE_BUFFS = 5;
 

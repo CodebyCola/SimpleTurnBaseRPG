@@ -6,38 +6,38 @@ package kelompok11.turnbaserpg.model.skill;
 
 import kelompok11.turnbaserpg.enums.SkillType;
 import kelompok11.turnbaserpg.model.Character.Character;
-import kelompok11.turnbaserpg.model.buff.*;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
  *
  * @author Pongo
  */
-public class IronWall extends Skill {
-    
-    public IronWall() {
+public class StoneBody extends Skill {
+
+    public StoneBody() {
+
         super(
-                "Iron Wall",
-                "Increase defense temporarily",
+                "Stone Body",
+                "Temporarily strengthen defense",
                 20,
                 10,
-                3,
+                GameConstants.SKILL_COOLDOWN_DEFAULT,
                 SkillType.DEFEND
         );
     }
-    
+
+    @Override
     public boolean cast(Character caster, Character target) {
-        
         if (currentCoolDown > 0) {
             System.out.println("Skill is on cooldown!");
             return false;
         }
-        
+
         if (caster.getStats().getCurrentMana() < manaCost) {
             System.out.println("Not enough mana!");
             return false;
         }
-        
+
         caster.getStats().increaseDefenseBonus(effectValue);
         caster.getStats().decreaseCurrentMana(manaCost);
         currentCoolDown = cooldown;
@@ -45,5 +45,5 @@ public class IronWall extends Skill {
         System.out.println("Player gain " + effectValue + " bonus defense stat");
         return true;
     }
-    
+
 }

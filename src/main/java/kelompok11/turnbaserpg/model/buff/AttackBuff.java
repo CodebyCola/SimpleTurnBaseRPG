@@ -14,7 +14,6 @@ import kelompok11.turnbaserpg.model.Character.Character;
 public class AttackBuff extends Buff {
 
     private int effectValue;
-    private BuffType type;
 
     public AttackBuff(int effectValue) {
         super("Attack Buff", 3);
@@ -23,12 +22,12 @@ public class AttackBuff extends Buff {
 
     @Override
     public void use(Character target) {
-        target.getStats().applyBuff(effectValue, type.ATTACK);
+        target.getStats().applyBuff(effectValue, BuffType.ATTACK);
     }
 
     @Override
     public void remove(Character target) {
-        target.getStats().removeBuff(effectValue, type.ATTACK);
+        target.getStats().removeBuff(effectValue, BuffType.ATTACK);
     }
 
 }

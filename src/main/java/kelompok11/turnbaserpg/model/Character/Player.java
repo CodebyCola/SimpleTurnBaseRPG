@@ -26,7 +26,6 @@ public class Player extends Character {
     private int totalGold;
     private Inventory inventory;
     private ArrayList<Skill> unlockedSkills;
-    private ArrayList<Buff> activeBuffs;
 
     public Player(String characterName, Role role) {
 
@@ -40,7 +39,7 @@ public class Player extends Character {
         inventory = new Inventory();
         maxExp = GameConstants.INITIAL_EXP_REQUIRED;
         unlockedSkills = new ArrayList<>();
-        activeBuffs = new ArrayList<>();
+
     }
 
     public void getPlayerDetail() {
@@ -137,17 +136,17 @@ public class Player extends Character {
 
         switch (role) {
             case WARRIOR:
-                stats.increaseMaxHP(GameConstants.WarriorStats.LEVEL_UP_HP_BONUS);
-                stats.increaseDefense(GameConstants.WarriorStats.LEVEL_UP_DEF_BONUS);
+                stats.increaseBaseHP(GameConstants.WarriorStats.LEVEL_UP_HP_BONUS);
+                stats.increaseBaseDefense(GameConstants.WarriorStats.LEVEL_UP_DEF_BONUS);
                 break;
             case MAGE:
-                stats.increaseMagic(GameConstants.MageStats.LEVEL_UP_MAGIC_BONUS);
-                stats.increaseMana(GameConstants.MageStats.LEVEL_UP_MANA_BONUS);
+                stats.increaseBaseMagic(GameConstants.MageStats.LEVEL_UP_MAGIC_BONUS);
+                stats.increaseBaseMana(GameConstants.MageStats.LEVEL_UP_MANA_BONUS);
                 break;
             case ARCHER:
-                stats.increaseAttack(GameConstants.ArcherStats.LEVEL_UP_ATK_BONUS);
-                stats.increaseDefense(GameConstants.ArcherStats.LEVEL_UP_DEF_BONUS);
-                stats.increaseMaxHP(GameConstants.ArcherStats.LEVEL_UP_HP_BONUS);
+                stats.increaseBaseAttack(GameConstants.ArcherStats.LEVEL_UP_ATK_BONUS);
+                stats.increaseBaseDefense(GameConstants.ArcherStats.LEVEL_UP_DEF_BONUS);
+                stats.increaseBaseHP(GameConstants.ArcherStats.LEVEL_UP_HP_BONUS);
                 break;
         }
         stats.boostStats();
@@ -176,32 +175,40 @@ public class Player extends Character {
     }
 
 //    Method game system
-    public void unlockSkill(Skill skill) {
+    public boolean unlockSkill(Skill skill) {
         for (Skill unlockedSkill : unlockedSkills) {
 
             if (unlockedSkill.getName().equals(skill.getName())) {
-                return;
+                return false;
             }
         }
 
         unlockedSkills.add(skill);
+        return true;
     }
 
     public ArrayList<Skill> getUnlockedSkills() {
         return unlockedSkills;
     }
 
-    public void addBuff(Buff buff) {
-        if (activeBuffs.size() >= GameConstants.MAX_ACTIVE_BUFFS) {
-            return;
+    public int getTotalUnlockedSkills() {
+        return unlockedSkills.size();
+    }
+
+//    Player battle system
+    public void setDefend(boolean set) {
+        if (set) {
+            stats.increaseDefenseBonus(GameConstants.DEFEND_BONUS);
+        } else {
+            stats.decreaseDefenseBonus(GameConstants.DEFEND_BONUS);
         }
-
-        buff.use(this);
-        activeBuffs.add(buff);
     }
 
-    public ArrayList<Buff> getActiveBuffs() {
-        return activeBuffs;
+    public void updateSkillCooldowns() {
+
+        for (Skill skill : unlockedSkills) {
+            skill.reduceCooldown();
+        }
     }
-    
+
 }
