@@ -10,6 +10,8 @@ import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.enums.Difficulty;
 import kelompok11.turnbaserpg.model.Character.Enemy;
 import kelompok11.turnbaserpg.model.Character.Player;
+import kelompok11.turnbaserpg.model.skill.BasicHeal;
+import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -31,20 +33,20 @@ public class DungeonSystem {
         if (player.getCurrentFloor() == 0) {
             player.setCurrentFloor(GameConstants.DEFAULT_FLOOR);
         }
-
+        
         while (player.getCurrentFloor() <= GameConstants.MAX_FLOOR && isRunning) {
-            System.out.println("Floor : " + player.getCurrentFloor());
             int maxWave = 5;
-            Difficulty diff = determineDifficulty();
+
+            Difficulty diff = determineDifficulty(); // Menentukan tingkat kesulitan berdasarkan lantai
             System.out.println("Welcome To Floor : " + player.getCurrentFloor());
 
             for (int wave = 1; wave <= maxWave; wave++) {
 
-                Enemy enemy = generateEnemy(diff);
-                updateEnemyStatus(enemy);
-                BattleSystem battle = new BattleSystem(player, enemy);
+                Enemy enemy = generateEnemy(diff); // Generate musuh random
+                updateEnemyStatus(enemy, diff); // update status musuh menyesuaikan lantai
+                BattleSystem battle = new BattleSystem(player, enemy); // buat object battle controller
                 BattleResult result = battle.startBattle(); // return 1 = menang, return 0 = kalah
-                handleBattleResult(result);
+                handleBattleResult(result); // menentukan hasil dari battle
 
                 if (result != BattleResult.WIN) {
                     isRunning = false;
@@ -52,16 +54,40 @@ public class DungeonSystem {
                 }
             }
 
-            // Jika Player menyelesaikan semua wave dan menang
+//            // Jika Player menyelesaikan semua wave dan menang
             if (player.isAlive() && isRunning) {
-                player.setCurrentFloor(player.getCurrentFloor() + 1);
+                player.setCurrentFloor(player.getCurrentFloor() + 1); // update lantai
                 System.out.println("Step to next floor ? (y/n)");
                 String next = input.next();
                 if (next.equalsIgnoreCase("n")) {
                     isRunning = false;
                 }
+
+                // reward skill didapat setelah menyelesaikan milestone floor ( kelipatan 10 )
+                if (player.getCurrentFloor() % GameConstants.FLOOR_MILESTONE == 0
+                        && player.getTotalUnlockedSkills() < GameConstants.MAX_SKILL_SLOTS) {
+
+                    Skill newSkill = Skill.getRandomSkill(player);
+
+                    if (newSkill != null) {
+
+                        player.unlockSkill(newSkill);
+                        System.out.println(
+                                "You gain new skill : " + newSkill.getName()
+                        );
+                    }
+
+                }
             }
+
         }
+
+        // Logic berhenti loop ketika lantai sudah mencapai 101
+        if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
+            System.out.println("Congrats you win!");
+
+        }
+
     }
 
     public Difficulty determineDifficulty() {
@@ -77,11 +103,9 @@ public class DungeonSystem {
     }
 
     public Enemy generateEnemy(Difficulty diff) {
-
         String enemyName;
-
+        
         switch (diff) {
-
             case EASY -> {
                 String[] easyEnemies = {
                     "Goblin",
@@ -89,8 +113,7 @@ public class DungeonSystem {
                     "Wolf"
                 };
 
-                enemyName
-                        = easyEnemies[ThreadLocalRandom.current()
+                enemyName = easyEnemies[ThreadLocalRandom.current()
                                 .nextInt(easyEnemies.length)];
             }
 
@@ -101,8 +124,7 @@ public class DungeonSystem {
                     "Skeleton"
                 };
 
-                enemyName
-                        = normalEnemies[ThreadLocalRandom.current()
+                enemyName = normalEnemies[ThreadLocalRandom.current()
                                 .nextInt(normalEnemies.length)];
             }
 
@@ -135,18 +157,19 @@ public class DungeonSystem {
         return new Enemy(enemyName);
     }
 
-    public void updateEnemyStatus(Enemy enemy) {
-        int maxHP = GameConstants.ENEMY_HP_PER_LEVEL * player.getCurrentFloor();
-        maxHP = (int) (maxHP * diff.getStatMultiplier());
+    public void updateEnemyStatus(Enemy enemy, Difficulty diff) {
+        int HP = GameConstants.ENEMY_HP_PER_LEVEL * player.getCurrentFloor();
+        HP = (int) (HP * diff.getStatMultiplier());
 
         int attack = GameConstants.ENEMY_ATK_PER_LEVEL * player.getCurrentFloor();
         attack = (int) (attack * diff.getStatMultiplier());
 
         int defense = GameConstants.ENEMY_DEF_PER_LEVEL * player.getCurrentFloor();
         defense = (int) (defense * diff.getStatMultiplier());
-        enemy.getStats().increaseMaxHP(maxHP);
-        enemy.getStats().increaseAttack(attack);
-        enemy.getStats().increaseDefense(defense);
+
+        enemy.getStats().increaseBaseHP(HP - enemy.getStats().getMaxHP());
+        enemy.getStats().increaseBaseAttack(attack - enemy.getStats().getBaseAttack());
+        enemy.getStats().increaseBaseDefense(defense - enemy.getStats().getBaseDefense());
     }
 
     private void handleBattleResult(BattleResult result) {

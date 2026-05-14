@@ -6,44 +6,45 @@ package kelompok11.turnbaserpg.model.skill;
 
 import kelompok11.turnbaserpg.enums.SkillType;
 import kelompok11.turnbaserpg.model.Character.Character;
-import kelompok11.turnbaserpg.model.buff.*;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
  *
  * @author Pongo
  */
-public class IronWall extends Skill {
-    
-    public IronWall() {
+public class LifeDrain extends Skill {
+
+    public LifeDrain() {
+
         super(
-                "Iron Wall",
-                "Increase defense temporarily",
+                "Life Drain",
+                "Absorb enemy HP",
+                35,
                 20,
-                10,
-                3,
-                SkillType.DEFEND
+                GameConstants.SKILL_COOLDOWN_MEDIUM,
+                SkillType.HEAL
         );
     }
-    
+
+    @Override
     public boolean cast(Character caster, Character target) {
-        
         if (currentCoolDown > 0) {
             System.out.println("Skill is on cooldown!");
             return false;
         }
-        
+
         if (caster.getStats().getCurrentMana() < manaCost) {
             System.out.println("Not enough mana!");
             return false;
         }
-        
-        caster.getStats().increaseDefenseBonus(effectValue);
+
+        caster.heal(effectValue);
+        target.takeDamage(effectValue);
         caster.getStats().decreaseCurrentMana(manaCost);
         currentCoolDown = cooldown;
         System.out.println("player " + caster.getCharacterName() + " Casting " + this.name);
-        System.out.println("Player gain " + effectValue + " bonus defense stat");
+        System.out.println("Player heal " + effectValue + " HP");
         return true;
     }
-    
+
 }

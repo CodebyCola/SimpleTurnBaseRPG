@@ -25,18 +25,19 @@ public class Enemy extends Character {
         ));
     }
 
-   
 // every turn mod 3 == 0 (every 3 turn)    
-    public int skillAttack() {
+    public void skillAttack(Character target) {
 
         double multiplier = ThreadLocalRandom.current().nextDouble(
                 GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
                 GameConstants.ENEMY_SKILL_MAX_MULTIPLIER);
 
-        int damage = (int) (stats.getBaseAttack() * multiplier);
+        int damage = (int) (stats.getTotalAttack() * multiplier);
 
 //        System.out.println("Critical multiplier: " + multiplier);
-        return damage;
+        target.takeDamage(damage);
+        System.out.println(characterName + " use attacking skill");
+        System.out.println(target.characterName + "taking " + damage + " damage");
     }
 
 }

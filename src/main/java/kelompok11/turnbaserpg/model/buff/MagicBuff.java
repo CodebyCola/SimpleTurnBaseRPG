@@ -14,7 +14,6 @@ import kelompok11.turnbaserpg.model.Character.Character;
 public class MagicBuff extends Buff {
 
     private int effectValue;
-    private BuffType type;
 
     public MagicBuff(int effectValue) {
         super("Magic Buff", 3);
@@ -23,11 +22,11 @@ public class MagicBuff extends Buff {
 
     @Override
     public void use(Character target) {
-        target.getStats().applyBuff(effectValue, type.DEFENSE);
+        target.getStats().applyBuff(effectValue, BuffType.DEFENSE);
     }
 
     @Override
     public void remove(Character target) {
-        target.getStats().removeBuff(effectValue, type.DEFENSE);
+        target.getStats().removeBuff(effectValue, BuffType.DEFENSE);
     }
 }

@@ -3,6 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package kelompok11.turnbaserpg.model.buff;
+
 import kelompok11.turnbaserpg.model.Character.Character;
 
 /**
@@ -33,5 +34,9 @@ public abstract class Buff {
 
     public String getName() {
         return name;
+    }
+
+    public boolean isExpired() {
+        return duration <= 0;
     }
 }
