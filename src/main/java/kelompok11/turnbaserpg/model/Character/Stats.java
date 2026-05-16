@@ -2,14 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.model.Character;
+package kelompok11.turnbaserpg.model.character;
 
 import kelompok11.turnbaserpg.enums.BuffType;
-import kelompok11.turnbaserpg.enums.Role;
-//import static kelompok11.turnbaserpg.enums.BuffType.ATTACK;
-//import static kelompok11.turnbaserpg.enums.BuffType.DEFENSE;
-//import static kelompok11.turnbaserpg.enums.BuffType.MAGIC;
-//import static kelompok11.turnbaserpg.enums.BuffType.MANA;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
@@ -54,6 +49,13 @@ public class Stats {
 
     public void increaseBaseMana(int amount) {
         baseMana += amount;
+    }
+    
+    public void increaseCurrentMana(int amount) {
+        currentMana += amount;
+        if(currentMana >= baseMana) {
+            currentMana = baseMana;
+        }
     }
 
     // Getter & Setter method
@@ -156,6 +158,7 @@ public class Stats {
         if (currentHP < 0) {
             currentHP = 0;
         }
+        
     }
 
     public void heal(int amount) {
@@ -215,7 +218,7 @@ public class Stats {
                 bonusMana -= effectValue;
 
                 break;
-        }
+        }        
     }
 
 //    Level up boost

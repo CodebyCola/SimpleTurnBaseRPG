@@ -7,8 +7,8 @@ package kelompok11.turnbaserpg.model.skill;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.enums.SkillType;
-import kelompok11.turnbaserpg.model.Character.Character;
-import kelompok11.turnbaserpg.model.Character.Player;
+import kelompok11.turnbaserpg.model.character.Character;
+import kelompok11.turnbaserpg.model.character.Player;
 
 /**
  *

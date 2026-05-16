@@ -2,15 +2,17 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.model.Character;
+package kelompok11.turnbaserpg.model.character;
 
-import kelompok11.turnbaserpg.model.Character.Inventory;
-import kelompok11.turnbaserpg.model.Character.Character;
+import kelompok11.turnbaserpg.model.character.Inventory;
+import kelompok11.turnbaserpg.model.character.Character;
 import java.util.ArrayList;
 import kelompok11.turnbaserpg.model.buff.Buff;
 import kelompok11.turnbaserpg.enums.*;
+import kelompok11.turnbaserpg.model.skill.BasicHeal;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
+import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
  *
@@ -39,6 +41,7 @@ public class Player extends Character {
         inventory = new Inventory();
         maxExp = GameConstants.INITIAL_EXP_REQUIRED;
         unlockedSkills = new ArrayList<>();
+        this.unlockSkill(new BasicHeal());
 
     }
 
@@ -49,6 +52,16 @@ public class Player extends Character {
         System.out.println("Exp : " + currentExp + " / " + maxExp);
         System.out.println("Gold Currency : " + totalGold);
 
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+    
+    
+
+    public Role getRole() {
+        return role;
     }
 
     public void getStatsDetail() {
@@ -131,6 +144,7 @@ public class Player extends Character {
         }
 
         level += 1;
+        GameLogger.info(characterName + " level up");
         currentExp -= maxExp;
         maxExp = (int) (maxExp * GameConstants.EXP_SCALING_MULTIPLIER);
 
@@ -153,6 +167,7 @@ public class Player extends Character {
     }
 
     public void gainExp(int exp) {
+        GameLogger.info(characterName + " gain " + exp + " exp");
         currentExp += exp;
         while (currentExp >= maxExp && level < GameConstants.MAX_LEVEL) {
             levelUp();
@@ -199,8 +214,10 @@ public class Player extends Character {
     public void setDefend(boolean set) {
         if (set) {
             stats.increaseDefenseBonus(GameConstants.DEFEND_BONUS);
+
         } else {
             stats.decreaseDefenseBonus(GameConstants.DEFEND_BONUS);
+
         }
     }
 
