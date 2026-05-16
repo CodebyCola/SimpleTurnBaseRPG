@@ -92,10 +92,10 @@ public class GameConstants {
     public static final int ENEMY_DEF_PER_LEVEL = 5;
 
 //    Rewards Scaling
-    public static final int BASE_GOLD_REWARD = 100;
+    public static final int BASE_GOLD_REWARD = 50;
     public static final int BASE_EXP_REWARD = 50;
-    public static final int EXP_SCALING_PER_LEVEL = 1;
-    public static final int GOLD_SCALING_PER_LEVEL = 2;
+    public static final double EXP_SCALING_PER_LEVEL = 1.1;
+    public static final double GOLD_SCALING_PER_LEVEL = 1.1;
 
 //    Skills Constants
     public static final int MAX_SKILL_SLOTS = 11;
@@ -132,9 +132,9 @@ public class GameConstants {
     public static final double LOOT_DROP_RATE = 0.4;
     
 //    Consumable Constants
-    public static final int SMALL_POTION_VALUE = 10;
-    public static final int MEDIUM_POTION_VALUE = 25;
-    public static final int LARGE_POTION_VALUE = 50;
+    public static final int SMALL_POTION_VALUE = 5;
+    public static final int MEDIUM_POTION_VALUE = 15;
+    public static final int LARGE_POTION_VALUE = 20;
 
 //    Gacha Constants
     public static final int GACHA_SINGLE_COST = 500; // Gold

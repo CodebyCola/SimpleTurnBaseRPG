@@ -6,8 +6,9 @@ package kelompok11.turnbaserpg.game;
 
 import java.util.Scanner;
 import kelompok11.turnbaserpg.enums.Role;
-import kelompok11.turnbaserpg.model.Character.Player;
+import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.BasicHeal;
+import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
  *
@@ -18,17 +19,67 @@ public class GameManager {
     private DungeonSystem dungeon;
     Scanner input = new Scanner(System.in);
     private Player player;
+    private String characterName;
+    private Role role = null;
 
 //    public void loadGame()
     public void startNewGame() {
 
         System.out.println("Input your character name: ");
-        String characterName;
+
         do {
             characterName = input.nextLine().trim();
         } while (characterName.isEmpty());
 
-        Role role = null;
+        chooseRole();
+
+        player = new Player(characterName, role);
+        GameLogger.info(characterName + " Join the game");
+        player.unlockSkill(new BasicHeal());
+        GameLogger.info(characterName + " Gain " + player.getUnlockedSkills().get(0).getName());
+        dungeon = new DungeonSystem(player);
+        showMainMenu();
+
+    }
+
+    public void showMainMenu() {
+        boolean isRunning = true;
+        while (isRunning) {
+
+            System.out.println("1. Jelajahi Dungeon");
+            System.out.println("2. Save Data");
+            System.out.println("3. Inventory");
+            System.out.println("4. Informasi Character");
+            System.out.println("5. Exit");
+            System.out.println("Input angka : ");
+            int pilihanMenu = input.nextInt();
+
+            switch (pilihanMenu) {
+                case 1:
+                    
+                    dungeon.attackDungeon();
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    player.getPlayerDetail();
+                    player.getStatsDetail();
+                    break;
+                case 5:
+                    isRunning = false;
+                    break;
+                default:
+                    System.out.println("invalid menu!");
+                    break;
+
+            }
+        }
+
+    }
+
+    public void chooseRole() {
         while (role == null) {
 
             System.out.println("Pilih Role mu:");
@@ -57,47 +108,6 @@ public class GameManager {
             }
         }
 
-        player = new Player(characterName, role);
-        player.unlockSkill(new BasicHeal());
-        player.getPlayerDetail();
-        player.getStatsDetail();
-        dungeon = new DungeonSystem(player);
-        showMainMenu();
-
-    }
-
-    public void showMainMenu() {
-        boolean isRunning = true;
-        while (isRunning) {
-
-            System.out.println("1. Jelajahi Dungeon");
-            System.out.println("2. Save Data");
-            System.out.println("3. Inventory");
-            System.out.println("4. Informasi Character");
-            System.out.println("5. Exit");
-            System.out.println("Input angka : ");
-            int pilihanMenu = input.nextInt();
-
-            switch (pilihanMenu) {
-                case 1:
-                    dungeon.attackDungeon();
-                    break;
-                case 2:
-                    break;
-                case 3:
-
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    isRunning = false;
-                    break;
-                default:
-                    System.out.println("invalid menu!");
-                    break;
-
-            }
-        }
-
+        GameLogger.info(characterName + " Role is " + role);
     }
 }

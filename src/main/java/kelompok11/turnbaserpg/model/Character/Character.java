@@ -2,11 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.model.Character;
+package kelompok11.turnbaserpg.model.character;
 
 import java.util.ArrayList;
 import kelompok11.turnbaserpg.model.buff.Buff;
 import kelompok11.turnbaserpg.utils.GameConstants;
+import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
  *
@@ -60,6 +61,7 @@ public abstract class Character {
 
         buff.use(this);
         activeBuffs.add(buff);
+        GameLogger.info(characterName + " gain " + buff + " buff");
     }
 
     public ArrayList<Buff> getActiveBuffs() {
@@ -82,6 +84,7 @@ public abstract class Character {
                         + " has expired!");
 
                 activeBuffs.remove(i);
+                GameLogger.info(buff + " buff had been removed" );
             }
         }
     }

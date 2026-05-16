@@ -7,13 +7,14 @@ package kelompok11.turnbaserpg.model.item.consumable;
 import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
 import kelompok11.turnbaserpg.model.item.Item;
-import kelompok11.turnbaserpg.model.Character.Character;
+import kelompok11.turnbaserpg.model.character.Character;
+import kelompok11.turnbaserpg.model.item.Usable;
 
 /**
  *
  * @author Pongo
  */
-public abstract class Potion extends Item {
+public abstract class Potion extends Item implements Usable{
 
     protected int effectValue;
     protected PotionTier tier;
@@ -28,7 +29,8 @@ public abstract class Potion extends Item {
     }
 
     public PotionTier getTier() {
-            return tier;
+        return tier;
     }
+
 
 }

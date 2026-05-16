@@ -4,7 +4,7 @@
  */
 package kelompok11.turnbaserpg.model.skill;
 
-import kelompok11.turnbaserpg.model.Character.Character;
+import kelompok11.turnbaserpg.model.character.Character;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.enums.SkillType;
 
@@ -16,7 +16,7 @@ public class BasicHeal extends Skill {
 
     public BasicHeal() {
         super(
-                "Heal",
+                "Basic Heal",
                 "Restore HP",
                 25,
                 20,

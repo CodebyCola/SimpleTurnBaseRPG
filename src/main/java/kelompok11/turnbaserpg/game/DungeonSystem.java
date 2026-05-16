@@ -8,11 +8,11 @@ import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.enums.Difficulty;
-import kelompok11.turnbaserpg.model.Character.Enemy;
-import kelompok11.turnbaserpg.model.Character.Player;
-import kelompok11.turnbaserpg.model.skill.BasicHeal;
+import kelompok11.turnbaserpg.model.character.Enemy;
+import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
+import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
  *
@@ -28,12 +28,13 @@ public class DungeonSystem {
     }
 
     public void attackDungeon() {
+        GameLogger.info(player.getCharacterName() + " entering dungeon");
         boolean isRunning = true;
 
         if (player.getCurrentFloor() == 0) {
             player.setCurrentFloor(GameConstants.DEFAULT_FLOOR);
         }
-        
+
         while (player.getCurrentFloor() <= GameConstants.MAX_FLOOR && isRunning) {
             int maxWave = 5;
 
@@ -41,7 +42,6 @@ public class DungeonSystem {
             System.out.println("Welcome To Floor : " + player.getCurrentFloor());
 
             for (int wave = 1; wave <= maxWave; wave++) {
-
                 Enemy enemy = generateEnemy(diff); // Generate musuh random
                 updateEnemyStatus(enemy, diff); // update status musuh menyesuaikan lantai
                 BattleSystem battle = new BattleSystem(player, enemy); // buat object battle controller
@@ -104,7 +104,7 @@ public class DungeonSystem {
 
     public Enemy generateEnemy(Difficulty diff) {
         String enemyName;
-        
+
         switch (diff) {
             case EASY -> {
                 String[] easyEnemies = {
@@ -114,7 +114,7 @@ public class DungeonSystem {
                 };
 
                 enemyName = easyEnemies[ThreadLocalRandom.current()
-                                .nextInt(easyEnemies.length)];
+                        .nextInt(easyEnemies.length)];
             }
 
             case NORMAL -> {
@@ -125,7 +125,7 @@ public class DungeonSystem {
                 };
 
                 enemyName = normalEnemies[ThreadLocalRandom.current()
-                                .nextInt(normalEnemies.length)];
+                        .nextInt(normalEnemies.length)];
             }
 
             case HARD -> {
