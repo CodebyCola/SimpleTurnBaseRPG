@@ -4,7 +4,7 @@
  */
 package kelompok11.turnbaserpg.model.character;
 
-import kelompok11.turnbaserpg.model.character.Inventory;
+
 import kelompok11.turnbaserpg.model.character.Character;
 import java.util.ArrayList;
 import kelompok11.turnbaserpg.model.buff.Buff;
@@ -26,6 +26,8 @@ public class Player extends Character {
     private int maxExp; // Batas exp yang diperlukan untuk naik level
     private int currentFloor; // Lantai tempat player berada saat ini
     private int totalGold;
+    private int id;
+    private String password;
     private Inventory inventory;
     private ArrayList<Skill> unlockedSkills;
 
@@ -45,6 +47,13 @@ public class Player extends Character {
 
     }
 
+    public Player() {
+        this.stats = new Stats();
+        this.inventory = new Inventory();
+    };
+
+    
+
     public void getPlayerDetail() {
         System.out.println("Character name : " + characterName);
         System.out.println("Role : " + role.getDisplayName());
@@ -57,8 +66,51 @@ public class Player extends Character {
     public Inventory getInventory() {
         return inventory;
     }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public void setCurrentExp(int currentExp) {
+        this.currentExp = currentExp;
+    }
+
+    public void setTotalGold(int totalGold) {
+        this.totalGold = totalGold;
+    }
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
+    public void setUnlockedSkills(ArrayList<Skill> unlockedSkills) {
+        this.unlockedSkills = unlockedSkills;
+    }
+
+    public void setStats(Stats stats) {
+        this.stats = stats;
+    }
     
-    
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public Role getRole() {
         return role;

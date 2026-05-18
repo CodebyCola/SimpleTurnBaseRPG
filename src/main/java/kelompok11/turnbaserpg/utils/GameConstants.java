@@ -84,12 +84,12 @@ public class GameConstants {
     public static final int HARD_FLOOR_MAX = 60;
 
 //    Enemy Scaling
-    public static final int BASE_ENEMY_HP = 50;
-    public static final int ENEMY_HP_PER_LEVEL = 15;
-    public static final int BASE_ENEMY_ATK = 10;
-    public static final int ENEMY_ATK_PER_LEVEL = 5;
+    public static final int BASE_ENEMY_HP = 30;
+    public static final int ENEMY_HP_PER_LEVEL = 5;
+    public static final int BASE_ENEMY_ATK = 5;
+    public static final int ENEMY_ATK_PER_LEVEL = 1;
     public static final int BASE_ENEMY_DEF = 5;
-    public static final int ENEMY_DEF_PER_LEVEL = 5;
+    public static final int ENEMY_DEF_PER_LEVEL = 1;
 
 //    Rewards Scaling
     public static final int BASE_GOLD_REWARD = 50;
@@ -130,7 +130,7 @@ public class GameConstants {
 //    Inventory & Equipments Constants
     public static final int MAX_INVENTORY_SLOT = 30;
     public static final double LOOT_DROP_RATE = 0.4;
-    
+
 //    Consumable Constants
     public static final int SMALL_POTION_VALUE = 5;
     public static final int MEDIUM_POTION_VALUE = 15;

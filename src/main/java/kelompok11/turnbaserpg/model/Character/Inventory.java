@@ -15,77 +15,128 @@ import kelompok11.turnbaserpg.utils.GameConstants;
  */
 public class Inventory {
 
-    private ArrayList<Item> items;
+    private ArrayList<InventorySlot> slots;
 
     public Inventory() {
-        items = new ArrayList<>();
+        slots = new ArrayList<>();
     }
 
-    public Item getItem(int index) {
-        if (index < 0 || index >= items.size()) {
-            System.out.println("Invalid item index");
-            return null;
-        }
-
-        return items.get(index);
+    public ArrayList<InventorySlot> getSlots() {
+        return slots;
     }
 
     public void addItem(Item item) {
-        if (items.size() < GameConstants.MAX_INVENTORY_SLOT) {
-            items.add(item);
-        } else {
-            System.out.println("Inventory full, cant add more item!");
+
+        // cek apakah item stackable dan sudah ada
+        for (InventorySlot slot : slots) {
+
+            Item slotItem = slot.getItem();
+
+            if (slotItem.getClass() == item.getClass()
+                    && slotItem.getName().equals(item.getName())) {
+
+                slot.addQuantity(1);
+
+                System.out.println(item.getName()
+                        + " quantity increased!");
+
+                return;
+            }
         }
 
+        // kalau belum ada slot
+        if (slots.size() >= GameConstants.MAX_INVENTORY_SLOT) {
+
+            System.out.println("Inventory full!");
+            return;
+        }
+
+        slots.add(new InventorySlot(item, 1));
+
+        System.out.println(item.getName()
+                + " added to inventory!");
+    }
+
+    public InventorySlot getSlot(int index) {
+
+        if (index < 0 || index >= slots.size()) {
+
+            System.out.println("Invalid slot index");
+            return null;
+        }
+
+        return slots.get(index);
     }
 
     public void removeItem(int index) {
 
-        if (index < 0 || index >= items.size()) {
+        InventorySlot slot = getSlot(index);
 
-            System.out.println("Invalid item index");
-            return;
-
-        }
-        if (items.isEmpty()) {
-            System.out.println("Inventory is empty");
+        if (slot == null) {
             return;
         }
 
-        items.remove(index);
-    }
+        slot.reduceQuantity(1);
 
-    public ArrayList<Item> getItems() {
-        return items;
-    }
-
-    public void showInventory() {
-
-        if (!items.isEmpty()) {
-
-            for (int i = 0; i < items.size(); i++) {
-                Item item = items.get(i);
-
-                System.out.println("[" + (i + 1) + "] " + item.getName());
-                System.out.println("Price: " + item.getPrice());
-                System.out.println("Description" + item.getDescription());
-                System.out.println("----------------");
-            }
-        } else {
-            System.out.println("Inventory empty");
+        if (slot.isEmpty()) {
+            slots.remove(index);
         }
     }
 
     public void useItem(int index, Character target) {
-        Item item = getItem(index);
-        if (item == null) {
+
+        InventorySlot slot = getSlot(index);
+
+        if (slot == null) {
             return;
         }
 
+        Item item = slot.getItem();
+
         if (item instanceof Usable usable) {
+
             usable.use(target);
+
             removeItem(index);
         }
     }
 
+    public void showInventory() {
+
+        if (slots.isEmpty()) {
+
+            System.out.println("Inventory empty");
+            return;
+        }
+
+        System.out.println("=== INVENTORY ===");
+
+        for (int i = 0; i < slots.size(); i++) {
+
+            InventorySlot slot = slots.get(i);
+
+            Item item = slot.getItem();
+
+            System.out.println(
+                    "[" + (i + 1) + "] "
+                    + item.getName()
+                    + " x" + slot.getQuantity()
+            );
+
+            System.out.println(
+                    "Price : " + item.getPrice()
+            );
+
+            System.out.println(
+                    "Description : "
+                    + item.getDescription()
+            );
+
+            System.out.println("----------------");
+        }
+    }
+
+    public boolean isEmpty() {
+        return slots.isEmpty();
+    }
 }

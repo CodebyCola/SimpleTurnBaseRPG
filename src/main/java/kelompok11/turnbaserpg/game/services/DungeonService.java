@@ -2,8 +2,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package kelompok11.turnbaserpg.game;
+package kelompok11.turnbaserpg.game.services;
 
+import kelompok11.turnbaserpg.game.services.BattleService;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.enums.BattleResult;
@@ -18,12 +19,12 @@ import kelompok11.turnbaserpg.utils.GameLogger;
  *
  * @author Pongo
  */
-public class DungeonSystem {
+public class DungeonService {
 
     private Player player;
     Scanner input = new Scanner(System.in);
 
-    public DungeonSystem(Player player) {
+    public DungeonService(Player player) {
         this.player = player;
     }
 
@@ -44,7 +45,7 @@ public class DungeonSystem {
             for (int wave = 1; wave <= maxWave; wave++) {
                 Enemy enemy = generateEnemy(diff); // Generate musuh random
                 updateEnemyStatus(enemy, diff); // update status musuh menyesuaikan lantai
-                BattleSystem battle = new BattleSystem(player, enemy); // buat object battle controller
+                BattleService battle = new BattleService(player, enemy); // buat object battle controller
                 BattleResult result = battle.startBattle(); // return 1 = menang, return 0 = kalah
                 handleBattleResult(result); // menentukan hasil dari battle
 
@@ -158,18 +159,22 @@ public class DungeonSystem {
     }
 
     public void updateEnemyStatus(Enemy enemy, Difficulty diff) {
-        int HP = GameConstants.ENEMY_HP_PER_LEVEL * player.getCurrentFloor();
-        HP = (int) (HP * diff.getStatMultiplier());
+        int hp = (int) ((GameConstants.BASE_ENEMY_HP
+                + (GameConstants.ENEMY_HP_PER_LEVEL * player.getCurrentFloor()))
+                * diff.getStatMultiplier());
 
-        int attack = GameConstants.ENEMY_ATK_PER_LEVEL * player.getCurrentFloor();
-        attack = (int) (attack * diff.getStatMultiplier());
+        int attack = (int) ((GameConstants.BASE_ENEMY_ATK
+                + (GameConstants.ENEMY_ATK_PER_LEVEL * player.getCurrentFloor()))
+                * diff.getStatMultiplier());
 
-        int defense = GameConstants.ENEMY_DEF_PER_LEVEL * player.getCurrentFloor();
-        defense = (int) (defense * diff.getStatMultiplier());
+        int defense = (int) ((GameConstants.BASE_ENEMY_DEF
+                + (GameConstants.ENEMY_DEF_PER_LEVEL * player.getCurrentFloor()))
+                * diff.getStatMultiplier());;
 
-        enemy.getStats().increaseBaseHP(HP - enemy.getStats().getMaxHP());
-        enemy.getStats().increaseBaseAttack(attack - enemy.getStats().getBaseAttack());
-        enemy.getStats().increaseBaseDefense(defense - enemy.getStats().getBaseDefense());
+        enemy.getStats().setMaxHP(hp);
+        enemy.getStats().setBaseAttack(attack);
+        enemy.getStats().setBaseDefense(defense);
+
     }
 
     private void handleBattleResult(BattleResult result) {

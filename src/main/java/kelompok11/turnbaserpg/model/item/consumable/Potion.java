@@ -14,7 +14,7 @@ import kelompok11.turnbaserpg.model.item.Usable;
  *
  * @author Pongo
  */
-public abstract class Potion extends Item implements Usable{
+public abstract class Potion extends Item implements Usable {
 
     protected int effectValue;
     protected PotionTier tier;
@@ -32,5 +32,8 @@ public abstract class Potion extends Item implements Usable{
         return tier;
     }
 
+    public ConsumableType getType() {
+        return type;
+    }
 
 }

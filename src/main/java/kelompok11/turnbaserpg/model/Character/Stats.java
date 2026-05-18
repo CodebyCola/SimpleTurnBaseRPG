@@ -50,11 +50,19 @@ public class Stats {
     public void increaseBaseMana(int amount) {
         baseMana += amount;
     }
-    
+
     public void increaseCurrentMana(int amount) {
         currentMana += amount;
-        if(currentMana >= baseMana) {
+        if (currentMana >= baseMana) {
             currentMana = baseMana;
+        }
+    }
+
+    public void decreaseCurrentMana(int manaCost) {
+        currentMana -= manaCost;
+
+        if (currentMana < 0) {
+            currentMana = 0;
         }
     }
 
@@ -69,6 +77,30 @@ public class Stats {
 
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
+    }
+
+    public void setCurrentMana(int currentMana) {
+        this.currentMana = currentMana;
+    }
+
+    public void setMaxHP(int maxHP) {
+        this.maxHP = maxHP;
+    }
+
+    public void setBaseAttack(int baseAttack) {
+        this.baseAttack = baseAttack;
+    }
+
+    public void setBaseDefense(int baseDefense) {
+        this.baseDefense = baseDefense;
+    }
+
+    public void setBaseMagic(int baseMagic) {
+        this.baseMagic = baseMagic;
+    }
+
+    public void setBaseMana(int baseMana) {
+        this.baseMana = baseMana;
     }
 
     public int getBaseAttack() {
@@ -89,14 +121,6 @@ public class Stats {
 
     public int getCurrentMana() {
         return currentMana;
-    }
-
-    public void decreaseCurrentMana(int manaCost) {
-        currentMana -= manaCost;
-
-        if (currentMana < 0) {
-            currentMana = 0;
-        }
     }
 
     public int getTotalAttack() {
@@ -145,6 +169,10 @@ public class Stats {
 
     }
 
+    public Stats() {
+
+    }
+
 //    Battle System
     public void takeDamage(int damage) {
         int finalDamage = damage * 100 / (100 + getTotalDefense());
@@ -158,7 +186,7 @@ public class Stats {
         if (currentHP < 0) {
             currentHP = 0;
         }
-        
+
     }
 
     public void heal(int amount) {
@@ -218,7 +246,7 @@ public class Stats {
                 bonusMana -= effectValue;
 
                 break;
-        }        
+        }
     }
 
 //    Level up boost
