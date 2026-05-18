@@ -1,22 +1,24 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.game.services;
 
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 import kelompok11.turnbaserpg.enums.BattleResult;
 import static kelompok11.turnbaserpg.enums.PotionTier.*;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
-import kelompok11.turnbaserpg.model.item.consumable.*;
+import kelompok11.turnbaserpg.model.item.consumable.HealthPotion;
+import kelompok11.turnbaserpg.model.item.consumable.ManaPotion;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- * Manages battle logic between a Player and an Enemy.
- * All console I/O is handled by GameManager; this class only manages game state.
+ * Pure battle logic service. Manages game state transitions for a single
+ * player-vs-enemy encounter.
+ *
+ * All output is returned as {@link BattleEvent} lists — no I/O happens here.
+ * Controllers are responsible for presenting events to the view and feeding
+ * player actions back via the action methods.
  */
 public class BattleService {
 
@@ -37,222 +39,226 @@ public class BattleService {
         this.enemyTurnCounter = 1;
     }
 
-    // -------------------------------------------------------------------------
-    // Battle Loop (called by GameManager)
-    // -------------------------------------------------------------------------
-
-    public BattleResult startBattle() {
+    // Battle Initialisation
+    public List<BattleEvent> initBattle() {
         playerTurn = true;
         enemyTurnCounter = 1;
 
-        System.out.println("--- Battle Start: " + player.getCharacterName() + " vs " + enemy.getCharacterName() + " ---");
-
-        while (enemy.isAlive() && !isEscaped && player.isAlive()) {
-            if (playerTurn) {
-                gainMana();
-                player.updateBuffs();
-                player.updateSkillCooldowns();
-                // Player turn is handled by GameManager which calls the action methods
-                // and then calls advanceTurn() to move to enemy turn
-                return null; // Signal: waiting for player input
-            } else {
-                enemyTurn();
-                if (playerDefend) {
-                    player.setDefend(false);
-                    playerDefend = false;
-                }
-                playerTurn = true;
-            }
-        }
-        return resolveResult();
+        List<BattleEvent> events = new ArrayList<>();
+        events.add(new BattleEvent(BattleEvent.Type.BATTLE_START,
+                "--- Battle Start: " + player.getCharacterName()
+                + " vs " + enemy.getCharacterName() + " ---"));
+        return events;
     }
 
+    // Turn Lifecycle (called by BattleController per turn)
     /**
-     * Full battle loop for console mode. GameManager calls this when it has handled
-     * all player input via the action methods below.
+     * Prepares the player's turn: regenerates mana, ticks buffs and cooldowns.
+     * Returns status events for the view. The controller then asks the player
+     * for an action and calls one of the action methods below.
      */
-    public BattleResult runBattleLoop(java.util.Scanner input) {
-        playerTurn = true;
-        enemyTurnCounter = 1;
+    public List<BattleEvent> beginPlayerTurn() {
+        gainMana();
+        player.updateBuffs();
+        player.updateSkillCooldowns();
 
-        System.out.println("--- Battle Start: " + player.getCharacterName()
-                + " vs " + enemy.getCharacterName() + " ---");
-
-        while (enemy.isAlive() && !isEscaped && player.isAlive()) {
-            if (playerTurn) {
-                gainMana();
-                player.updateBuffs();
-                player.updateSkillCooldowns();
-                playerTurn(input);
-            } else {
-                enemyTurn();
-                if (playerDefend) {
-                    player.setDefend(false);
-                    playerDefend = false;
-                }
-            }
-
-            if (!enemy.isAlive()) break;
-            playerTurn = !playerTurn;
-        }
-
-        applyWinRewards();
-        return resolveResult();
+        List<BattleEvent> events = new ArrayList<>();
+        events.add(new BattleEvent(BattleEvent.Type.PLAYER_STATUS,
+                String.format("--- Your Turn ---  HP: %d/%d   Mana: %d/%d   Enemy HP: %d/%d",
+                        player.getStats().getCurrentHP(), player.getStats().getMaxHP(),
+                        player.getStats().getCurrentMana(), player.getStats().getBaseMana(),
+                        enemy.getStats().getCurrentHP(), enemy.getStats().getMaxHP())));
+        return events;
     }
 
-    // -------------------------------------------------------------------------
-    // Turn Logic
-    // -------------------------------------------------------------------------
+//     Executes the enemy's turn and returns events describing what happened.
+    public List<BattleEvent> executeEnemyTurn() {
+        List<BattleEvent> events = new ArrayList<>();
+        events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
+                "--- Enemy Turn: " + enemy.getCharacterName() + " ---"));
 
-    public void gainMana() {
-        switch (player.getRole()) {
-            case WARRIOR -> player.getStats().increaseCurrentMana(5);
-            case MAGE    -> player.getStats().increaseCurrentMana(20);
-            case ARCHER  -> player.getStats().increaseCurrentMana(10);
-        }
-    }
-
-    private void playerTurn(java.util.Scanner input) {
-        printBattleStatus();
-        boolean validAction = false;
-
-        while (!validAction) {
-            printPlayerMenu();
-            int choice = input.nextInt();
-            validAction = handlePlayerAction(choice, input);
-        }
-    }
-
-    /**
-     * Processes a player's chosen battle action.
-     * @param action 1=Attack, 2=Defend, 3=Skill, 4=Item, 5=Escape
-     * @return true if the action was valid and the turn should end
-     */
-    public boolean handlePlayerAction(int action, java.util.Scanner input) {
-        switch (action) {
-            case 1 -> {
-                player.basicAttack(enemy);
-                return true;
-            }
-            case 2 -> {
-                player.setDefend(true);
-                playerDefend = true;
-                System.out.println(player.getCharacterName() + " takes a defensive stance!");
-                return true;
-            }
-            case 3 -> {
-                if (player.getTotalUnlockedSkills() == 0) {
-                    System.out.println("No skills available!");
-                    return false;
-                }
-                return useSkillMenu(input);
-            }
-            case 4 -> {
-                if (player.getInventory().isEmpty()) {
-                    System.out.println("Inventory is empty!");
-                    return false;
-                }
-                player.getInventory().showInventory();
-                System.out.println("Choose item (number): ");
-                int index = input.nextInt() - 1;
-                player.getInventory().useItem(index, player);
-                return true;
-            }
-            case 5 -> {
-                if (Math.random() < 0.5) {
-                    System.out.println(player.getCharacterName() + " escaped!");
-                    isEscaped = true;
-                } else {
-                    System.out.println("Escape failed!");
-                }
-                return true;
-            }
-            default -> {
-                System.out.println("Invalid choice! Try again.");
-                return false;
-            }
-        }
-    }
-
-    public void enemyTurn() {
-        System.out.println("--- Enemy Turn: " + enemy.getCharacterName() + " ---");
         if (enemyTurnCounter % 3 == 0) {
             enemy.skillAttack(player);
+            events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
+                    enemy.getCharacterName() + " used a skill attack!"));
         } else {
             enemy.basicAttack(player);
+            events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
+                    enemy.getCharacterName() + " attacked!"));
         }
+
+        events.add(new BattleEvent(BattleEvent.Type.PLAYER_STATUS,
+                String.format("Player HP: %d/%d",
+                        player.getStats().getCurrentHP(), player.getStats().getMaxHP())));
+
+        if (playerDefend) {
+            player.setDefend(false);
+            playerDefend = false;
+        }
+
         enemyTurnCounter++;
+        return events;
     }
 
-    public boolean useSkillMenu(java.util.Scanner input) {
-        System.out.println("=== SKILL LIST ===");
+    // Player Actions (called by BattleController based on user input)
+    // Returns null if the action was invalid and the turn should NOT advance.
+    public List<BattleEvent> actionBasicAttack() {
+        player.basicAttack(enemy);
+        List<BattleEvent> events = new ArrayList<>();
+        events.add(new BattleEvent(BattleEvent.Type.ACTION_RESULT,
+                player.getCharacterName() + " attacked " + enemy.getCharacterName() + "!"
+                + "  Enemy HP: " + enemy.getStats().getCurrentHP()
+                + "/" + enemy.getStats().getMaxHP()));
+        return events;
+    }
+
+//   Player chooses Defend.
+    public List<BattleEvent> actionDefend() {
+        player.setDefend(true);
+        playerDefend = true;
+        List<BattleEvent> events = new ArrayList<>();
+        events.add(new BattleEvent(BattleEvent.Type.ACTION_RESULT,
+                player.getCharacterName() + " takes a defensive stance!"));
+        return events;
+    }
+
+    /**
+     * Player chooses to use a skill by 0-based index into the unlocked skill
+     * list. Returns null if the action was invalid (bad index, cooldown, no
+     * mana).
+     */
+    public List<BattleEvent> actionUseSkill(int skillIndex) {
         var skills = player.getUnlockedSkills();
-        for (int i = 0; i < skills.size(); i++) {
-            Skill skill = skills.get(i);
-            System.out.printf("[%d] %-18s | Mana: %2d | CD: %d%n",
-                i + 1, skill.getName(), skill.getManaCost(), skill.getCurrentCooldown());
+        List<BattleEvent> events = new ArrayList<>();
+
+        if (skills.isEmpty()) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "No skills available!"));
+            return null;
         }
-        System.out.println("Choose skill (0 to cancel): ");
-        int choice = input.nextInt();
-        if (choice == 0) return false;
-        if (choice < 1 || choice > skills.size()) {
-            System.out.println("Invalid skill choice!");
-            return false;
+        if (skillIndex < 0 || skillIndex >= skills.size()) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "Invalid skill selection!"));
+            return null;
         }
-        return skills.get(choice - 1).cast(player, enemy);
+
+        Skill skill = skills.get(skillIndex);
+        boolean success = skill.cast(player, enemy);
+
+        if (!success) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR,
+                    "Cannot use " + skill.getName() + " right now (cooldown or insufficient mana)."));
+            return null;
+        }
+
+        events.add(new BattleEvent(BattleEvent.Type.SKILL_CAST,
+                player.getCharacterName() + " cast " + skill.getName() + "!"));
+        return events;
+    }
+
+    /**
+     * Player chooses to use an item by 0-based inventory index. Returns null if
+     * the action was invalid.
+     */
+    public List<BattleEvent> actionUseItem(int inventoryIndex) {
+        List<BattleEvent> events = new ArrayList<>();
+
+        if (player.getInventory().isEmpty()) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "Inventory is empty!"));
+            return null;
+        }
+        if (player.getInventory().getSlot(inventoryIndex) == null) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "Invalid item selection!"));
+            return null;
+        }
+
+        String itemName = player.getInventory().getSlot(inventoryIndex).getItem().getName();
+        player.getInventory().useItem(inventoryIndex, player);
+        events.add(new BattleEvent(BattleEvent.Type.ITEM_USED,
+                player.getCharacterName() + " used " + itemName + "!"));
+        return events;
+    }
+
+//     Player attempts to escape (50 % chance).
+    public List<BattleEvent> actionEscape() {
+        List<BattleEvent> events = new ArrayList<>();
+        if (Math.random() < 0.5) {
+            isEscaped = true;
+            events.add(new BattleEvent(BattleEvent.Type.ESCAPE_SUCCESS,
+                    player.getCharacterName() + " escaped!"));
+        } else {
+            events.add(new BattleEvent(BattleEvent.Type.ESCAPE_FAILED, "Escape failed!"));
+        }
+        return events;
+    }
+
+    // Battle State Queries
+    public boolean isBattleOngoing() {
+        return enemy.isAlive() && player.isAlive() && !isEscaped;
+    }
+
+    public boolean isPlayerTurn() {
+        return playerTurn;
+    }
+
+    public void setPlayerTurn(boolean v) {
+        this.playerTurn = v;
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    // Battle Resolution
     // -------------------------------------------------------------------------
+    /**
+     * Applies win rewards and returns the final {@link BattleResult}. Call once
+     * {@link #isBattleOngoing()} returns false.
+     */
+    public BattleResult resolveBattle() {
+        BattleResult result = computeResult();
+        if (result == BattleResult.WIN) {
+            applyWinRewards();
+        }
+        GameLogger.info("Battle resolved: " + result
+                + " | Player: " + player.getCharacterName());
+        return result;
+    }
+
+    // Helpers
+    void gainMana() {
+        switch (player.getRole()) {
+            case WARRIOR ->
+                player.getStats().increaseCurrentMana(10);
+            case MAGE ->
+                player.getStats().increaseCurrentMana(15);
+            case ARCHER ->
+                player.getStats().increaseCurrentMana(12);
+        }
+    }
 
     private void applyWinRewards() {
-        if (!enemy.isAlive()) {
-            int exp = (int) (GameConstants.BASE_EXP_REWARD
-                    * GameConstants.EXP_SCALING_PER_LEVEL * (player.getLevel() * 0.1));
-            player.gainExp(exp);
+        int exp = (int) (GameConstants.BASE_EXP_REWARD
+                * GameConstants.EXP_SCALING_PER_LEVEL * (player.getLevel() * 0.1));
+        player.gainExp(exp);
 
-            if (Math.random() < 0.3) {
-                int gold = (int) (GameConstants.BASE_GOLD_REWARD
-                        * GameConstants.GOLD_SCALING_PER_LEVEL * player.getLevel());
-                player.gainGold(gold);
-            }
+        if (Math.random() < 0.3) {
+            int gold = (int) (GameConstants.BASE_GOLD_REWARD
+                    * GameConstants.GOLD_SCALING_PER_LEVEL * player.getLevel());
+            player.gainGold(gold);
+        }
 
-            if (Math.random() < GameConstants.LOOT_DROP_RATE) {
-                if (Math.random() < 0.5) {
-                    player.getInventory().addItem(new HealthPotion(SMALL));
-                } else {
-                    player.getInventory().addItem(new ManaPotion(SMALL));
-                }
+        if (Math.random() < GameConstants.LOOT_DROP_RATE) {
+            if (Math.random() < 0.5) {
+                player.getInventory().addItem(new HealthPotion(SMALL));
+            } else {
+                player.getInventory().addItem(new ManaPotion(SMALL));
             }
         }
     }
 
-    private BattleResult resolveResult() {
-        if (!player.isAlive()) return BattleResult.LOSE;
-        if (isEscaped) return BattleResult.ESCAPED;
+    private BattleResult computeResult() {
+        if (!player.isAlive()) {
+            return BattleResult.LOSE;
+        }
+        if (isEscaped) {
+            return BattleResult.ESCAPED;
+        }
         return BattleResult.WIN;
     }
-
-    private void printBattleStatus() {
-        System.out.println("--- Your Turn ---");
-        System.out.printf("HP: %d/%d   Mana: %d/%d%n",
-            player.getStats().getCurrentHP(), player.getStats().getMaxHP(),
-            player.getStats().getCurrentMana(), player.getStats().getBaseMana());
-        System.out.printf("Enemy HP: %d/%d%n",
-            enemy.getStats().getCurrentHP(), enemy.getStats().getMaxHP());
-    }
-
-    private void printPlayerMenu() {
-        System.out.println("1. Basic Attack");
-        System.out.println("2. Defend");
-        System.out.println("3. Use Skill");
-        System.out.println("4. Use Item");
-        System.out.println("5. Escape (50% chance)");
-        System.out.print("Choose: ");
-    }
-
-    public boolean isEscaped() { return isEscaped; }
-    public Player getPlayer() { return player; }
-    public Enemy getEnemy() { return enemy; }
 }

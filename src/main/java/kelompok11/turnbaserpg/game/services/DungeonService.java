@@ -4,7 +4,8 @@
  */
 package kelompok11.turnbaserpg.game.services;
 
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.enums.Difficulty;
@@ -15,116 +16,43 @@ import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- * Manages dungeon floor progression logic. Console I/O for routing/menus is
- * delegated to GameManager. This service handles enemy generation, difficulty
+ * Manages dungeon floor progression logic.
+ * This service handles enemy generation, difficulty
  * scaling, boss floors, and wave logic.
  */
 public class DungeonService {
 
     private final Player player;
-    private static final int WAVES_PER_FLOOR = 5;
-    private static final int BOSS_HP_MULTIPLIER = 3;
-    private static final int BOSS_ATK_MULTIPLIER = 2;
+
+    public static final int WAVES_PER_FLOOR = 5;
+    public static final int BOSS_HP_MULTIPLIER = 3;
+    public static final int BOSS_ATK_MULTIPLIER = 2;
 
     public DungeonService(Player player) {
         this.player = player;
     }
-
-    // -------------------------------------------------------------------------
-    // Main Dungeon Loop (console-driven, called by GameManager)
-    // -------------------------------------------------------------------------
-    public void attackDungeon(Scanner input) {
-        GameLogger.info(player.getCharacterName() + " entering dungeon");
-
+    
+    
+    // Dungeon Initialisation
+    public void initDungeon() {
         if (player.getCurrentFloor() == 0) {
             player.setCurrentFloor(GameConstants.DEFAULT_FLOOR);
         }
-
-        boolean isRunning = true;
-
-        while (player.getCurrentFloor() <= GameConstants.MAX_FLOOR && isRunning) {
-            int floor = player.getCurrentFloor();
-            boolean isBossFloor = isBossFloor(floor);
-            Difficulty difficulty = determineDifficulty(floor);
-
-            System.out.println("==========================================");
-            System.out.println("  FLOOR " + floor + (isBossFloor ? " [BOSS FLOOR]" : "")
-                    + " | Difficulty: " + difficulty.getDisplayName());
-            System.out.println("==========================================");
-
-            boolean floorCleared = runFloor(difficulty, isBossFloor, input);
-
-            if (!floorCleared) {
-                isRunning = false;
-                break;
-            }
-
-            // Floor cleared
-            handleSkillReward(floor);
-            player.setCurrentFloor(floor + 1);
-
-            if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
-                break;
-            }
-
-            System.out.print("Advance to Floor " + player.getCurrentFloor() + "? (y/n): ");
-            String next = input.next();
-            if (next.equalsIgnoreCase("n")) {
-                isRunning = false;
-            }
-        }
-
-        if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
-            System.out.println("==========================================");
-            System.out.println("  CONGRATULATIONS! You cleared all 100 floors!");
-            System.out.println("==========================================");
-            GameLogger.info(player.getCharacterName() + " completed the dungeon!");
-        }
     }
 
-    // -------------------------------------------------------------------------
-    // Floor & Wave Logic
-    // -------------------------------------------------------------------------
-    /**
-     * Runs all waves for one floor.
-     *
-     * @return true if all waves were cleared, false if player lost or escaped
-     */
-    private boolean runFloor(Difficulty difficulty, boolean isBossFloor, Scanner input) {
-        int totalWaves = isBossFloor ? 1 : WAVES_PER_FLOOR;
-
-        for (int wave = 1; wave <= totalWaves; wave++) {
-            Enemy enemy;
-            if (isBossFloor) {
-                enemy = generateBossEnemy(difficulty);
-                System.out.println(">>> BOSS APPEARS: " + enemy.getCharacterName() + " <<<");
-            } else {
-                enemy = generateEnemy(difficulty);
-                System.out.println("[Wave " + wave + "/" + totalWaves + "] Enemy: " + enemy.getCharacterName());
-            }
-
-            scaleEnemyStats(enemy, difficulty, isBossFloor);
-
-            BattleService battle = new BattleService(player, enemy);
-            BattleResult result = battle.runBattleLoop(input);
-
-            handleBattleResult(result);
-
-            if (result == BattleResult.LOSE) {
-                return false;
-            }
-            if (result == BattleResult.ESCAPED) {
-                return false;
-            }
-        }
-
-        System.out.println("Floor " + player.getCurrentFloor() + " cleared!");
-        return true;
+    // Floor State Queries (called by DungeonController)
+    public boolean hasMoreFloors() {
+        return player.getCurrentFloor() <= GameConstants.MAX_FLOOR;
     }
 
-    // -------------------------------------------------------------------------
-    // Difficulty & Enemy Generation
-    // -------------------------------------------------------------------------
+    public int getCurrentFloor() {
+        return player.getCurrentFloor();
+    }
+
+    public boolean isBossFloor(int floor) {
+        return floor % GameConstants.FLOOR_MILESTONE == 0;
+    }
+
     public Difficulty determineDifficulty(int floor) {
         if (floor <= GameConstants.EASY_FLOOR_MAX) {
             return Difficulty.EASY;
@@ -138,53 +66,48 @@ public class DungeonService {
         return Difficulty.NIGHTMARE;
     }
 
-    public boolean isBossFloor(int floor) {
-        return floor % GameConstants.FLOOR_MILESTONE == 0;
+    public int wavesForFloor(boolean isBossFloor) {
+        return isBossFloor ? 1 : WAVES_PER_FLOOR;
     }
 
+    // Enemy Generation
     public Enemy generateEnemy(Difficulty difficulty) {
         String[] easyEnemies = {"Goblin", "Slime", "Wolf"};
         String[] normalEnemies = {"Troll", "Orc", "Skeleton"};
         String[] hardEnemies = {"Demon", "Succubus", "Vampire"};
         String[] nightmareEnemies = {"Dragon", "Lich", "Dark Knight"};
 
-        String[] pool;
-        switch (difficulty) {
+        String[] pool = switch (difficulty) {
             case EASY ->
-                pool = easyEnemies;
+                easyEnemies;
             case NORMAL ->
-                pool = normalEnemies;
+                normalEnemies;
             case HARD ->
-                pool = hardEnemies;
+                hardEnemies;
             case NIGHTMARE ->
-                pool = nightmareEnemies;
-            default ->
-                pool = new String[]{"Unknown"};
-        }
+                nightmareEnemies;
+        };
 
         String name = pool[ThreadLocalRandom.current().nextInt(pool.length)];
         return new Enemy(name);
     }
 
     public Enemy generateBossEnemy(Difficulty difficulty) {
-        String[] easyBosses = {"Goblin King"};
+        String[] easyBosses = {"Goblin King", "SLime King", "Alpha Wolf King"};
         String[] normalBosses = {"Orc Warlord", "Stone Golem"};
         String[] hardBosses = {"Vampire Lord", "Arch Demon"};
         String[] nightmareBosses = {"Ancient Dragon", "Death Lich", "Shadow Emperor"};
 
-        String[] pool;
-        switch (difficulty) {
+        String[] pool = switch (difficulty) {
             case EASY ->
-                pool = easyBosses;
+                easyBosses;
             case NORMAL ->
-                pool = normalBosses;
+                normalBosses;
             case HARD ->
-                pool = hardBosses;
+                hardBosses;
             case NIGHTMARE ->
-                pool = nightmareBosses;
-            default ->
-                pool = new String[]{"????"};
-        }
+                nightmareBosses;
+        };
 
         String name = pool[ThreadLocalRandom.current().nextInt(pool.length)];
         return new Enemy(name);
@@ -207,33 +130,115 @@ public class DungeonService {
         enemy.getStats().setBaseDefense(def);
     }
 
-    // -------------------------------------------------------------------------
-    // Rewards
-    // -------------------------------------------------------------------------
-    private void handleSkillReward(int floor) {
+    // Floor Progression Events
+    public List<DungeonEvent> buildFloorStartEvents(int floor, boolean isBossFloor, Difficulty difficulty) {
+        List<DungeonEvent> events = new ArrayList<>();
+        events.add(new DungeonEvent(DungeonEvent.Type.FLOOR_START,
+                "==========================================\n"
+                + "  FLOOR " + floor
+                + (isBossFloor ? " [BOSS FLOOR]" : "")
+                + " | Difficulty: " + difficulty.getDisplayName()
+                + "\n=========================================="));
+        return events;
+    }
+
+    /**
+     * Builds events for a wave header. Call before each wave's battle.
+     */
+    
+    public List<DungeonEvent> buildWaveStartEvents(int wave, int totalWaves, Enemy enemy, boolean isBossFloor) {
+        List<DungeonEvent> events = new ArrayList<>();
+        if (isBossFloor) {
+            events.add(new DungeonEvent(DungeonEvent.Type.BOSS_APPEAR,
+                    ">>> BOSS APPEARS: " + enemy.getCharacterName() + " <<<"));
+        } else {
+            events.add(new DungeonEvent(DungeonEvent.Type.WAVE_START,
+                    "[Wave " + wave + "/" + totalWaves + "] Enemy: " + enemy.getCharacterName()));
+        }
+        return events;
+    }
+
+    // Post-Battle & Rewards
+    public FloorOutcome processBattleResult(BattleResult result) {
+        List<DungeonEvent> events = new ArrayList<>();
+
+        switch (result) {
+            case WIN ->
+                events.add(new DungeonEvent(DungeonEvent.Type.BATTLE_RESULT, "Victory!"));
+            case LOSE ->
+                events.add(new DungeonEvent(DungeonEvent.Type.PLAYER_DEFEATED, "You were defeated..."));
+            case ESCAPED ->
+                events.add(new DungeonEvent(DungeonEvent.Type.PLAYER_ESCAPED, "You fled from battle."));
+        }
+
+        boolean floorContinues = (result == BattleResult.WIN);
+        return new FloorOutcome(floorContinues, events);
+    }
+
+    /**
+     * Grants a skill reward if the floor milestone is reached and the player
+     * has room for more skills.
+     */
+    public List<DungeonEvent> applySkillReward(int floor) {
+        List<DungeonEvent> events = new ArrayList<>();
+
         if (floor % GameConstants.FLOOR_MILESTONE == 0
                 && player.getTotalUnlockedSkills() < GameConstants.MAX_SKILL_SLOTS) {
+
             Skill newSkill = Skill.getRandomSkill(player);
             if (newSkill != null) {
                 player.unlockSkill(newSkill);
-                System.out.println("*** New Skill Unlocked: " + newSkill.getName() + " ***");
+                events.add(new DungeonEvent(DungeonEvent.Type.SKILL_UNLOCKED,
+                        "*** New Skill Unlocked: " + newSkill.getName() + " ***"));
                 GameLogger.info(player.getCharacterName() + " unlocked skill: " + newSkill.getName());
             }
         }
+        return events;
     }
 
-    private void handleBattleResult(BattleResult result) {
-        switch (result) {
-            case WIN ->
-                System.out.println("Victory!");
-            case LOSE ->
-                System.out.println("You were defeated...");
-            case ESCAPED ->
-                System.out.println("You fled from battle.");
+    /**
+     * Advances the player's floor counter by one. Returns events if the dungeon
+     * has been completed.
+     */
+    public List<DungeonEvent> advanceFloor() {
+        int cleared = player.getCurrentFloor();
+        player.setCurrentFloor(cleared + 1);
+
+        List<DungeonEvent> events = new ArrayList<>();
+        if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
+            events.add(new DungeonEvent(DungeonEvent.Type.DUNGEON_COMPLETE,
+                    "==========================================\n"
+                    + "  CONGRATULATIONS! You cleared all 100 floors!\n"
+                    + "=========================================="));
+            GameLogger.info(player.getCharacterName() + " completed the dungeon!");
         }
+        return events;
     }
 
     public Player getPlayer() {
         return player;
+    }
+
+    // Inner result type
+    /**
+     * Carries the outcome of processing a single battle result for a wave.
+     */
+    public static class FloorOutcome {
+
+        private final boolean waveCleared;
+        private final List<DungeonEvent> events;
+
+        public FloorOutcome(boolean waveCleared, List<DungeonEvent> events) {
+            this.waveCleared = waveCleared;
+            this.events = events;
+        }
+
+        public boolean isWaveCleared() {
+            return waveCleared;
+        }
+
+        public List<DungeonEvent> getEvents() {
+            return events;
+        }
     }
 }

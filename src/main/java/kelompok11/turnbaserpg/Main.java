@@ -1,14 +1,15 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
 package kelompok11.turnbaserpg;
 
 import javax.swing.SwingUtilities;
+import kelompok11.turnbaserpg.game.controller.GameController;
 import kelompok11.turnbaserpg.view.GameFrame;
 
 /**
+ * Application entry point.
  *
- * @author Pongo
+ * Creates the top-level {@link GameController}, then hands it to the view
+ * ({@link GameFrame}) so the view can wire itself to controller callbacks
+ * without knowing any game logic.
  */
 public class Main {
 
@@ -16,7 +17,6 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
 
             new GameFrame();
-
         });
     }
 }
