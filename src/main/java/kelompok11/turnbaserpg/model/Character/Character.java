@@ -24,7 +24,16 @@ public abstract class Character {
         this.stats = stats;
         activeBuffs = new ArrayList<>();
     }
+    
+    public Character() {
+        
+    }
 
+    public void setCharacterName(String characterName) {
+        this.characterName = characterName;
+    }
+
+    
     public String getCharacterName() {
         return characterName;
     }

@@ -3,6 +3,8 @@
  */
 package kelompok11.turnbaserpg;
 
+import java.sql.Connection;
+import kelompok11.turnbaserpg.database.Connector;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.game.*;
 

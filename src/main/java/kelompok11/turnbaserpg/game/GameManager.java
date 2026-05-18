@@ -4,7 +4,10 @@
  */
 package kelompok11.turnbaserpg.game;
 
+import kelompok11.turnbaserpg.game.services.DungeonService;
+import java.sql.Connection;
 import java.util.Scanner;
+import kelompok11.turnbaserpg.database.Connector;
 import kelompok11.turnbaserpg.enums.Role;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.BasicHeal;
@@ -16,11 +19,13 @@ import kelompok11.turnbaserpg.utils.GameLogger;
  */
 public class GameManager {
 
-    private DungeonSystem dungeon;
+    private DungeonService dungeon;
     Scanner input = new Scanner(System.in);
     private Player player;
     private String characterName;
     private Role role = null;
+    
+    
 
 //    public void loadGame()
     public void startNewGame() {
@@ -37,7 +42,7 @@ public class GameManager {
         GameLogger.info(characterName + " Join the game");
         player.unlockSkill(new BasicHeal());
         GameLogger.info(characterName + " Gain " + player.getUnlockedSkills().get(0).getName());
-        dungeon = new DungeonSystem(player);
+        dungeon = new DungeonService(player);
         showMainMenu();
 
     }
