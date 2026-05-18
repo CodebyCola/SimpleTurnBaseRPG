@@ -22,11 +22,11 @@ public class MagicBuff extends Buff {
 
     @Override
     public void use(Character target) {
-        target.getStats().applyBuff(effectValue, BuffType.DEFENSE);
+        target.getStats().applyBuff(effectValue, BuffType.MAGIC);
     }
 
     @Override
     public void remove(Character target) {
-        target.getStats().removeBuff(effectValue, BuffType.DEFENSE);
+        target.getStats().removeBuff(effectValue, BuffType.MAGIC);
     }
 }

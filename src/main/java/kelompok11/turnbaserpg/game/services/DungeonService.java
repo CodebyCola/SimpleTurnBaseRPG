@@ -4,7 +4,6 @@
  */
 package kelompok11.turnbaserpg.game.services;
 
-import kelompok11.turnbaserpg.game.services.BattleService;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.enums.BattleResult;
@@ -16,182 +15,225 @@ import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- *
- * @author Pongo
+ * Manages dungeon floor progression logic. Console I/O for routing/menus is
+ * delegated to GameManager. This service handles enemy generation, difficulty
+ * scaling, boss floors, and wave logic.
  */
 public class DungeonService {
 
-    private Player player;
-    Scanner input = new Scanner(System.in);
+    private final Player player;
+    private static final int WAVES_PER_FLOOR = 5;
+    private static final int BOSS_HP_MULTIPLIER = 3;
+    private static final int BOSS_ATK_MULTIPLIER = 2;
 
     public DungeonService(Player player) {
         this.player = player;
     }
 
-    public void attackDungeon() {
+    // -------------------------------------------------------------------------
+    // Main Dungeon Loop (console-driven, called by GameManager)
+    // -------------------------------------------------------------------------
+    public void attackDungeon(Scanner input) {
         GameLogger.info(player.getCharacterName() + " entering dungeon");
-        boolean isRunning = true;
 
         if (player.getCurrentFloor() == 0) {
             player.setCurrentFloor(GameConstants.DEFAULT_FLOOR);
         }
 
+        boolean isRunning = true;
+
         while (player.getCurrentFloor() <= GameConstants.MAX_FLOOR && isRunning) {
-            int maxWave = 5;
+            int floor = player.getCurrentFloor();
+            boolean isBossFloor = isBossFloor(floor);
+            Difficulty difficulty = determineDifficulty(floor);
 
-            Difficulty diff = determineDifficulty(); // Menentukan tingkat kesulitan berdasarkan lantai
-            System.out.println("Welcome To Floor : " + player.getCurrentFloor());
+            System.out.println("==========================================");
+            System.out.println("  FLOOR " + floor + (isBossFloor ? " [BOSS FLOOR]" : "")
+                    + " | Difficulty: " + difficulty.getDisplayName());
+            System.out.println("==========================================");
 
-            for (int wave = 1; wave <= maxWave; wave++) {
-                Enemy enemy = generateEnemy(diff); // Generate musuh random
-                updateEnemyStatus(enemy, diff); // update status musuh menyesuaikan lantai
-                BattleService battle = new BattleService(player, enemy); // buat object battle controller
-                BattleResult result = battle.startBattle(); // return 1 = menang, return 0 = kalah
-                handleBattleResult(result); // menentukan hasil dari battle
+            boolean floorCleared = runFloor(difficulty, isBossFloor, input);
 
-                if (result != BattleResult.WIN) {
-                    isRunning = false;
-                    break;
-                }
+            if (!floorCleared) {
+                isRunning = false;
+                break;
             }
 
-//            // Jika Player menyelesaikan semua wave dan menang
-            if (player.isAlive() && isRunning) {
-                player.setCurrentFloor(player.getCurrentFloor() + 1); // update lantai
-                System.out.println("Step to next floor ? (y/n)");
-                String next = input.next();
-                if (next.equalsIgnoreCase("n")) {
-                    isRunning = false;
-                }
+            // Floor cleared
+            handleSkillReward(floor);
+            player.setCurrentFloor(floor + 1);
 
-                // reward skill didapat setelah menyelesaikan milestone floor ( kelipatan 10 )
-                if (player.getCurrentFloor() % GameConstants.FLOOR_MILESTONE == 0
-                        && player.getTotalUnlockedSkills() < GameConstants.MAX_SKILL_SLOTS) {
-
-                    Skill newSkill = Skill.getRandomSkill(player);
-
-                    if (newSkill != null) {
-
-                        player.unlockSkill(newSkill);
-                        System.out.println(
-                                "You gain new skill : " + newSkill.getName()
-                        );
-                    }
-
-                }
+            if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
+                break;
             }
 
+            System.out.print("Advance to Floor " + player.getCurrentFloor() + "? (y/n): ");
+            String next = input.next();
+            if (next.equalsIgnoreCase("n")) {
+                isRunning = false;
+            }
         }
 
-        // Logic berhenti loop ketika lantai sudah mencapai 101
         if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
-            System.out.println("Congrats you win!");
-
+            System.out.println("==========================================");
+            System.out.println("  CONGRATULATIONS! You cleared all 100 floors!");
+            System.out.println("==========================================");
+            GameLogger.info(player.getCharacterName() + " completed the dungeon!");
         }
-
     }
 
-    public Difficulty determineDifficulty() {
-        if (player.getCurrentFloor() <= GameConstants.EASY_FLOOR_MAX) {
+    // -------------------------------------------------------------------------
+    // Floor & Wave Logic
+    // -------------------------------------------------------------------------
+    /**
+     * Runs all waves for one floor.
+     *
+     * @return true if all waves were cleared, false if player lost or escaped
+     */
+    private boolean runFloor(Difficulty difficulty, boolean isBossFloor, Scanner input) {
+        int totalWaves = isBossFloor ? 1 : WAVES_PER_FLOOR;
+
+        for (int wave = 1; wave <= totalWaves; wave++) {
+            Enemy enemy;
+            if (isBossFloor) {
+                enemy = generateBossEnemy(difficulty);
+                System.out.println(">>> BOSS APPEARS: " + enemy.getCharacterName() + " <<<");
+            } else {
+                enemy = generateEnemy(difficulty);
+                System.out.println("[Wave " + wave + "/" + totalWaves + "] Enemy: " + enemy.getCharacterName());
+            }
+
+            scaleEnemyStats(enemy, difficulty, isBossFloor);
+
+            BattleService battle = new BattleService(player, enemy);
+            BattleResult result = battle.runBattleLoop(input);
+
+            handleBattleResult(result);
+
+            if (result == BattleResult.LOSE) {
+                return false;
+            }
+            if (result == BattleResult.ESCAPED) {
+                return false;
+            }
+        }
+
+        System.out.println("Floor " + player.getCurrentFloor() + " cleared!");
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
+    // Difficulty & Enemy Generation
+    // -------------------------------------------------------------------------
+    public Difficulty determineDifficulty(int floor) {
+        if (floor <= GameConstants.EASY_FLOOR_MAX) {
             return Difficulty.EASY;
-        } else if (player.getCurrentFloor() <= GameConstants.NORMAL_FLOOR_MAX) {
+        }
+        if (floor <= GameConstants.NORMAL_FLOOR_MAX) {
             return Difficulty.NORMAL;
-        } else if (player.getCurrentFloor() <= GameConstants.HARD_FLOOR_MAX) {
+        }
+        if (floor <= GameConstants.HARD_FLOOR_MAX) {
             return Difficulty.HARD;
-        } else { // NightMare
-            return Difficulty.NIGHTMARE;
         }
+        return Difficulty.NIGHTMARE;
     }
 
-    public Enemy generateEnemy(Difficulty diff) {
-        String enemyName;
+    public boolean isBossFloor(int floor) {
+        return floor % GameConstants.FLOOR_MILESTONE == 0;
+    }
 
-        switch (diff) {
-            case EASY -> {
-                String[] easyEnemies = {
-                    "Goblin",
-                    "Slime",
-                    "Wolf"
-                };
+    public Enemy generateEnemy(Difficulty difficulty) {
+        String[] easyEnemies = {"Goblin", "Slime", "Wolf"};
+        String[] normalEnemies = {"Troll", "Orc", "Skeleton"};
+        String[] hardEnemies = {"Demon", "Succubus", "Vampire"};
+        String[] nightmareEnemies = {"Dragon", "Lich", "Dark Knight"};
 
-                enemyName = easyEnemies[ThreadLocalRandom.current()
-                        .nextInt(easyEnemies.length)];
-            }
-
-            case NORMAL -> {
-                String[] normalEnemies = {
-                    "Troll",
-                    "Orc",
-                    "Skeleton"
-                };
-
-                enemyName = normalEnemies[ThreadLocalRandom.current()
-                        .nextInt(normalEnemies.length)];
-            }
-
-            case HARD -> {
-                String[] hardEnemies = {
-                    "Demon",
-                    "Succubus",
-                    "Vampire"
-                };
-
-                enemyName = hardEnemies[ThreadLocalRandom.current()
-                        .nextInt(hardEnemies.length)];
-            }
-
-            case NIGHTMARE -> {
-                String[] nightmareEnemies = {
-                    "Dragon",
-                    "Lich",
-                    "Dark Knight"
-                };
-
-                enemyName = nightmareEnemies[ThreadLocalRandom.current()
-                        .nextInt(nightmareEnemies.length)];
-            }
-
+        String[] pool;
+        switch (difficulty) {
+            case EASY ->
+                pool = easyEnemies;
+            case NORMAL ->
+                pool = normalEnemies;
+            case HARD ->
+                pool = hardEnemies;
+            case NIGHTMARE ->
+                pool = nightmareEnemies;
             default ->
-                enemyName = "Unknown";
+                pool = new String[]{"Unknown"};
         }
 
-        return new Enemy(enemyName);
+        String name = pool[ThreadLocalRandom.current().nextInt(pool.length)];
+        return new Enemy(name);
     }
 
-    public void updateEnemyStatus(Enemy enemy, Difficulty diff) {
-        int hp = (int) ((GameConstants.BASE_ENEMY_HP
-                + (GameConstants.ENEMY_HP_PER_LEVEL * player.getCurrentFloor()))
-                * diff.getStatMultiplier());
+    public Enemy generateBossEnemy(Difficulty difficulty) {
+        String[] easyBosses = {"Goblin King"};
+        String[] normalBosses = {"Orc Warlord", "Stone Golem"};
+        String[] hardBosses = {"Vampire Lord", "Arch Demon"};
+        String[] nightmareBosses = {"Ancient Dragon", "Death Lich", "Shadow Emperor"};
 
-        int attack = (int) ((GameConstants.BASE_ENEMY_ATK
-                + (GameConstants.ENEMY_ATK_PER_LEVEL * player.getCurrentFloor()))
-                * diff.getStatMultiplier());
+        String[] pool;
+        switch (difficulty) {
+            case EASY ->
+                pool = easyBosses;
+            case NORMAL ->
+                pool = normalBosses;
+            case HARD ->
+                pool = hardBosses;
+            case NIGHTMARE ->
+                pool = nightmareBosses;
+            default ->
+                pool = new String[]{"????"};
+        }
 
-        int defense = (int) ((GameConstants.BASE_ENEMY_DEF
-                + (GameConstants.ENEMY_DEF_PER_LEVEL * player.getCurrentFloor()))
-                * diff.getStatMultiplier());;
+        String name = pool[ThreadLocalRandom.current().nextInt(pool.length)];
+        return new Enemy(name);
+    }
+
+    public void scaleEnemyStats(Enemy enemy, Difficulty difficulty, boolean isBossFloor) {
+        int floor = player.getCurrentFloor();
+        int hp = (int) ((GameConstants.BASE_ENEMY_HP + (GameConstants.ENEMY_HP_PER_LEVEL * floor)) * difficulty.getStatMultiplier());
+        int atk = (int) ((GameConstants.BASE_ENEMY_ATK + (GameConstants.ENEMY_ATK_PER_LEVEL * floor)) * difficulty.getStatMultiplier());
+        int def = (int) ((GameConstants.BASE_ENEMY_DEF + (GameConstants.ENEMY_DEF_PER_LEVEL * floor)) * difficulty.getStatMultiplier());
+
+        if (isBossFloor) {
+            hp *= BOSS_HP_MULTIPLIER;
+            atk *= BOSS_ATK_MULTIPLIER;
+        }
 
         enemy.getStats().setMaxHP(hp);
-        enemy.getStats().setBaseAttack(attack);
-        enemy.getStats().setBaseDefense(defense);
+        enemy.getStats().setCurrentHP(hp);
+        enemy.getStats().setBaseAttack(atk);
+        enemy.getStats().setBaseDefense(def);
+    }
 
+    // -------------------------------------------------------------------------
+    // Rewards
+    // -------------------------------------------------------------------------
+    private void handleSkillReward(int floor) {
+        if (floor % GameConstants.FLOOR_MILESTONE == 0
+                && player.getTotalUnlockedSkills() < GameConstants.MAX_SKILL_SLOTS) {
+            Skill newSkill = Skill.getRandomSkill(player);
+            if (newSkill != null) {
+                player.unlockSkill(newSkill);
+                System.out.println("*** New Skill Unlocked: " + newSkill.getName() + " ***");
+                GameLogger.info(player.getCharacterName() + " unlocked skill: " + newSkill.getName());
+            }
+        }
     }
 
     private void handleBattleResult(BattleResult result) {
         switch (result) {
-
-            case WIN -> {
-                System.out.println("You win! next wave incoming");
-            }
-
-            case LOSE -> {
-                System.out.println("Game Over!");
-            }
-
-            case ESCAPED -> {
-                System.out.println("You escaped from dungeon");
-            }
+            case WIN ->
+                System.out.println("Victory!");
+            case LOSE ->
+                System.out.println("You were defeated...");
+            case ESCAPED ->
+                System.out.println("You fled from battle.");
         }
     }
 
+    public Player getPlayer() {
+        return player;
+    }
 }

@@ -9,12 +9,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
 /**
- *
- * @author Pongo
+ * Represents an AI-controlled enemy character. Has a basic attack and a skill
+ * attack used every 3rd turn.
  */
 public class Enemy extends Character {
 
-    // Default stats for enemy
     public Enemy(String characterName) {
         super(characterName, new Stats(
                 GameConstants.BASE_ENEMY_HP,
@@ -25,19 +24,17 @@ public class Enemy extends Character {
         ));
     }
 
-// every turn mod 3 == 0 (every 3 turn)    
+    /**
+     * Used every 3rd enemy turn — deals scaled damage based on attack stat.
+     */
     public void skillAttack(Character target) {
-
         double multiplier = ThreadLocalRandom.current().nextDouble(
                 GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
-                GameConstants.ENEMY_SKILL_MAX_MULTIPLIER);
-
+                GameConstants.ENEMY_SKILL_MAX_MULTIPLIER
+        );
         int damage = (int) (stats.getTotalAttack() * multiplier);
-
-//        System.out.println("Critical multiplier: " + multiplier);
         target.takeDamage(damage);
-        System.out.println(characterName + " use attacking skill");
-        System.out.println(target.characterName + "taking " + damage + " damage");
+        System.out.println(characterName + " unleashes a powerful attack!");
+        System.out.println(target.getCharacterName() + " takes " + damage + " damage!");
     }
-
 }
