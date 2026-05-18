@@ -58,8 +58,6 @@ public abstract class Character {
         int totalAttack = stats.getTotalAttack();
 
         target.takeDamage(totalAttack);
-        System.out.println(characterName + " hit " + target.getCharacterName());
-        System.out.println(target.getCharacterName() + " Take " + totalAttack + " damage");
     }
 
     // Buff Systems
@@ -88,9 +86,6 @@ public abstract class Character {
             if (buff.isExpired()) {
 
                 buff.remove(this);
-
-                System.out.println(buff.getName()
-                        + " has expired!");
 
                 activeBuffs.remove(i);
                 GameLogger.info(buff + " buff had been removed" );

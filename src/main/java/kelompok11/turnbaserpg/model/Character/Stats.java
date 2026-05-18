@@ -302,12 +302,4 @@ public class Stats {
         bonusMana -= amount;
     }
 
-//    Stats detail
-    public void viewDetailStats() {
-        System.out.println("Hp : " + currentHP + " / " + maxHP);
-        System.out.println("Attack : " + baseAttack);
-        System.out.println("Defense : " + baseDefense);
-        System.out.println("Magic : " + baseMagic);
-        System.out.println("Mana : " + baseMana);
-    }
 }
