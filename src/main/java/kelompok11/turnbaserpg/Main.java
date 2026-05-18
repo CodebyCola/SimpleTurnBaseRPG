@@ -3,10 +3,8 @@
  */
 package kelompok11.turnbaserpg;
 
-import java.sql.Connection;
-import kelompok11.turnbaserpg.database.Connector;
-import kelompok11.turnbaserpg.model.character.Player;
-import kelompok11.turnbaserpg.game.*;
+import javax.swing.SwingUtilities;
+import kelompok11.turnbaserpg.view.GameFrame;
 
 /**
  *
@@ -15,7 +13,10 @@ import kelompok11.turnbaserpg.game.*;
 public class Main {
 
     public static void main(String[] args) {
-        GameManager gameManager = new GameManager();
-        gameManager.run();
+        SwingUtilities.invokeLater(() -> {
+
+            new GameFrame();
+
+        });
     }
 }

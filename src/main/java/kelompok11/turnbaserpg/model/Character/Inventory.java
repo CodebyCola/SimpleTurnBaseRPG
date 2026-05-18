@@ -37,9 +37,6 @@ public class Inventory {
 
                 slot.addQuantity(1);
 
-                System.out.println(item.getName()
-                        + " quantity increased!");
-
                 return;
             }
         }
@@ -47,21 +44,17 @@ public class Inventory {
         // kalau belum ada slot
         if (slots.size() >= GameConstants.MAX_INVENTORY_SLOT) {
 
-            System.out.println("Inventory full!");
             return;
         }
 
         slots.add(new InventorySlot(item, 1));
 
-        System.out.println(item.getName()
-                + " added to inventory!");
     }
 
     public InventorySlot getSlot(int index) {
 
         if (index < 0 || index >= slots.size()) {
 
-            System.out.println("Invalid slot index");
             return null;
         }
 
@@ -105,34 +98,14 @@ public class Inventory {
 
         if (slots.isEmpty()) {
 
-            System.out.println("Inventory empty");
             return;
         }
-
-        System.out.println("=== INVENTORY ===");
 
         for (int i = 0; i < slots.size(); i++) {
 
             InventorySlot slot = slots.get(i);
 
             Item item = slot.getItem();
-
-            System.out.println(
-                    "[" + (i + 1) + "] "
-                    + item.getName()
-                    + " x" + slot.getQuantity()
-            );
-
-            System.out.println(
-                    "Price : " + item.getPrice()
-            );
-
-            System.out.println(
-                    "Description : "
-                    + item.getDescription()
-            );
-
-            System.out.println("----------------");
         }
     }
 

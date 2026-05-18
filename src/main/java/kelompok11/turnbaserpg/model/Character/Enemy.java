@@ -34,7 +34,5 @@ public class Enemy extends Character {
         );
         int damage = (int) (stats.getTotalAttack() * multiplier);
         target.takeDamage(damage);
-        System.out.println(characterName + " unleashes a powerful attack!");
-        System.out.println(target.getCharacterName() + " takes " + damage + " damage!");
     }
 }

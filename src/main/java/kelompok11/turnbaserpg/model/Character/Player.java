@@ -51,17 +51,9 @@ public class Player extends Character {
         this.unlockedSkills = new ArrayList<>();
     }
 
-    public void getPlayerDetail() {
-        System.out.println("=== CHARACTER INFO ===");
-        System.out.println("Name  : " + characterName);
-        System.out.println("Role  : " + role.getDisplayName());
-        System.out.println("Level : " + level);
-        System.out.println("EXP   : " + currentExp + " / " + maxExp);
-        System.out.println("Gold  : " + totalGold);
-        System.out.println("Floor : " + currentFloor);
+    public Player getPlayerDetail() { // ambil detail player untuk view
+        return this;
     }
-
-    public void getStatsDetail() { stats.viewDetailStats(); }
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -76,6 +68,7 @@ public class Player extends Character {
     public int getMaxExp() { return maxExp; }
     public void setMaxExp(int maxExp) { this.maxExp = maxExp; }
     public int getCurrentFloor() { return currentFloor; }
+    public Stats getStats(){return stats;}
 
     public void setCurrentFloor(int currentFloor) {
         if (currentFloor > this.currentFloor) {
@@ -110,7 +103,6 @@ public class Player extends Character {
 
     public void levelUp() {
         if (this.level >= GameConstants.MAX_LEVEL) {
-            System.out.println("Already at max level!");
             return;
         }
         level++;
@@ -133,13 +125,11 @@ public class Player extends Character {
                 break;
         }
         stats.boostStats();
-        System.out.println("*** LEVEL UP! You are now Level " + level + " ***");
     }
 
     public void gainExp(int exp) {
         GameLogger.info(characterName + " gained " + exp + " EXP");
         currentExp += exp;
-        System.out.println("+" + exp + " EXP  (" + currentExp + "/" + maxExp + ")");
         while (currentExp >= maxExp && level < GameConstants.MAX_LEVEL) {
             levelUp();
         }
@@ -148,7 +138,6 @@ public class Player extends Character {
     public void gainGold(int amount) {
         if (amount > 0) {
             totalGold += amount;
-            System.out.println("+" + amount + " Gold  (Total: " + totalGold + ")");
         }
     }
 
@@ -157,7 +146,6 @@ public class Player extends Character {
             totalGold -= amount;
             return true;
         }
-        System.out.println("Not enough gold!");
         return false;
     }
 
