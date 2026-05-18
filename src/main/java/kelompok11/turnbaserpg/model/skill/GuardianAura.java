@@ -5,6 +5,7 @@
 package kelompok11.turnbaserpg.model.skill;
 
 import kelompok11.turnbaserpg.enums.SkillType;
+import kelompok11.turnbaserpg.model.buff.DefenseBuff;
 import kelompok11.turnbaserpg.model.character.Character;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
@@ -15,15 +16,8 @@ import kelompok11.turnbaserpg.utils.GameConstants;
 public class GuardianAura extends Skill {
 
     public GuardianAura() {
-
-        super(
-                "Guardian Aura",
-                "Increase defense temporarily",
-                30,
-                20,
-                GameConstants.SKILL_COOLDOWN_MEDIUM,
-                SkillType.DEFEND
-        );
+        super("Guardian Aura", "Increase defense temporarily", 30, 20,
+                GameConstants.SKILL_COOLDOWN_MEDIUM, SkillType.DEFEND);
     }
 
     @Override
@@ -32,17 +26,15 @@ public class GuardianAura extends Skill {
             System.out.println("Skill is on cooldown!");
             return false;
         }
-
         if (caster.getStats().getCurrentMana() < manaCost) {
             System.out.println("Not enough mana!");
             return false;
         }
-
-        caster.getStats().increaseDefenseBonus(effectValue);
+        caster.addBuff(new DefenseBuff(effectValue));
         caster.getStats().decreaseCurrentMana(manaCost);
         currentCoolDown = cooldown;
-        System.out.println("player " + caster.getCharacterName() + " Casting " + this.name);
-        System.out.println("Player gain " + effectValue + " bonus defense stat");
+        System.out.println(caster.getCharacterName() + " casts " + name + "!");
+        System.out.println("Defense +" + effectValue + " for 3 turns.");
         return true;
     }
 

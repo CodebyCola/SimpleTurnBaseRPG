@@ -14,105 +14,179 @@ import kelompok11.turnbaserpg.model.skill.BasicHeal;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- *
- * @author Pongo
+ * Central game controller. Manages all user-facing routing: login, new account
+ * creation, and main menu. Business logic is delegated to service classes
+ * (DungeonService, BattleService) and persistence to SaveManager / LoadManager.
  */
 public class GameManager {
 
-    private DungeonService dungeon;
-    Scanner input = new Scanner(System.in);
     private Player player;
-    private String characterName;
-    private Role role = null;
-    
-    
+    private DungeonService dungeonService;
+    private final SaveManager saveManager;
+    private final LoadManager loadManager;
+    private final Scanner input;
 
-//    public void loadGame()
-    public void startNewGame() {
-
-        System.out.println("Input your character name: ");
-
-        do {
-            characterName = input.nextLine().trim();
-        } while (characterName.isEmpty());
-
-        chooseRole();
-
-        player = new Player(characterName, role);
-        GameLogger.info(characterName + " Join the game");
-        player.unlockSkill(new BasicHeal());
-        GameLogger.info(characterName + " Gain " + player.getUnlockedSkills().get(0).getName());
-        dungeon = new DungeonService(player);
-        showMainMenu();
-
+    public GameManager() {
+        this.saveManager = new SaveManager();
+        this.loadManager = new LoadManager();
+        this.input = new Scanner(System.in);
     }
 
-    public void showMainMenu() {
-        boolean isRunning = true;
-        while (isRunning) {
+    // -------------------------------------------------------------------------
+    // Entry Point
+    // -------------------------------------------------------------------------
+    public void run() {
+        System.out.println("==========================================");
+        System.out.println("       WELCOME TO TURN-BASED RPG");
+        System.out.println("==========================================");
+        showLoginMenu();
+    }
 
-            System.out.println("1. Jelajahi Dungeon");
-            System.out.println("2. Save Data");
-            System.out.println("3. Inventory");
-            System.out.println("4. Informasi Character");
-            System.out.println("5. Exit");
-            System.out.println("Input angka : ");
-            int pilihanMenu = input.nextInt();
+    // -------------------------------------------------------------------------
+    // Login / Account Creation
+    // -------------------------------------------------------------------------
+    private void showLoginMenu() {
+        boolean running = true;
+        while (running) {
+            System.out.println("\n1. Login");
+            System.out.println("2. Create New Account");
+            System.out.println("3. Exit");
+            System.out.print("Choose: ");
 
-            switch (pilihanMenu) {
-                case 1:
-                    
-                    dungeon.attackDungeon();
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    player.getPlayerDetail();
-                    player.getStatsDetail();
-                    break;
-                case 5:
-                    isRunning = false;
-                    break;
-                default:
-                    System.out.println("invalid menu!");
-                    break;
-
+            int choice = readInt();
+            switch (choice) {
+                case 1 -> {
+                    if (handleLogin()) {
+                        showMainMenu();
+                    }
+                }
+                case 2 -> {
+                    handleNewAccount();
+                    showMainMenu();
+                }
+                case 3 ->
+                    running = false;
+                default ->
+                    System.out.println("Invalid choice!");
             }
         }
-
+        System.out.println("Goodbye!");
     }
 
-    public void chooseRole() {
-        while (role == null) {
+    private boolean handleLogin() {
+        System.out.print("Enter username: ");
+        String name = readLine();
+        System.out.print("Enter password: ");
+        String password = readLine();
 
-            System.out.println("Pilih Role mu:");
+        player = loadManager.load(name, password);
+        if (player == null) {
+            System.out.println("Login failed. Username or password incorrect.");
+            return false;
+        }
+        System.out.println("Welcome back, " + player.getCharacterName() + "!");
+        dungeonService = new DungeonService(player);
+        return true;
+    }
+
+    private void handleNewAccount() {
+        System.out.println("=== CREATE NEW ACCOUNT ===");
+        System.out.print("Enter character name: ");
+        String name = readLine();
+
+        System.out.print("Set password: ");
+        String password = readLine();
+
+        Role role = chooseRole();
+
+        player = new Player(name, role);
+        player.setPassword(password);
+
+        // Persist immediately so the player gets a DB id
+        saveManager.save(player);
+
+        GameLogger.info("New account created: " + name + " [" + role + "]");
+        System.out.println("Account created! Welcome, " + name + "!");
+        dungeonService = new DungeonService(player);
+    }
+
+    private Role chooseRole() {
+        Role role = null;
+        while (role == null) {
+            System.out.println("\n=== CHOOSE YOUR ROLE ===");
             System.out.println("1. " + Role.WARRIOR.getDisplayName() + " - " + Role.WARRIOR.getDescription());
             System.out.println("2. " + Role.MAGE.getDisplayName() + " - " + Role.MAGE.getDescription());
             System.out.println("3. " + Role.ARCHER.getDisplayName() + " - " + Role.ARCHER.getDescription());
-            System.out.println("Input Angka : ");
-            int pilihanRole = input.nextInt();
+            System.out.print("Choose: ");
 
-            switch (pilihanRole) {
-                case 1 -> {
+            switch (readInt()) {
+                case 1 ->
                     role = Role.WARRIOR;
-                }
-
-                case 2 -> {
+                case 2 ->
                     role = Role.MAGE;
-                }
-
-                case 3 -> {
+                case 3 ->
                     role = Role.ARCHER;
-                }
-
-                default -> {
-                    System.out.println("Role invalid, try again!");
-                }
+                default ->
+                    System.out.println("Invalid choice, try again.");
             }
         }
+        return role;
+    }
 
-        GameLogger.info(characterName + " Role is " + role);
+    // -------------------------------------------------------------------------
+    // Main Menu
+    // -------------------------------------------------------------------------
+    public void showMainMenu() {
+        boolean running = true;
+        while (running) {
+            System.out.println("\n==================== MAIN MENU ====================");
+            System.out.println("1. Enter Dungeon");
+            System.out.println("2. Save Game");
+            System.out.println("3. View Inventory");
+            System.out.println("4. View Character Info");
+            System.out.println("5. Logout");
+            System.out.print("Choose: ");
+
+            int choice = readInt();
+            switch (choice) {
+                case 1 ->
+                    dungeonService.attackDungeon(input);
+                case 2 ->
+                    saveManager.save(player);
+                case 3 ->
+                    player.getInventory().showInventory();
+                case 4 -> {
+                    player.getPlayerDetail();
+                    player.getStatsDetail();
+                }
+                case 5 -> {
+                    System.out.println("Logging out...");
+                    running = false;
+                }
+                default ->
+                    System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Input Helpers
+    // -------------------------------------------------------------------------
+    private int readInt() {
+        while (!input.hasNextInt()) {
+            System.out.println("Please enter a number.");
+            input.next();
+        }
+        int val = input.nextInt();
+        input.nextLine(); // consume newline
+        return val;
+    }
+
+    private String readLine() {
+        String line = "";
+        while (line.isBlank()) {
+            line = input.nextLine().trim();
+        }
+        return line;
     }
 }

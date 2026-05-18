@@ -22,11 +22,11 @@ public class ManaBuff extends Buff {
 
     @Override
     public void use(Character target) {
-        target.getStats().applyBuff(effectValue, BuffType.DEFENSE);
+        target.getStats().applyBuff(effectValue, BuffType.MANA);
     }
 
     @Override
     public void remove(Character target) {
-        target.getStats().removeBuff(effectValue, BuffType.DEFENSE);
+        target.getStats().removeBuff(effectValue, BuffType.MANA);
     }
 }

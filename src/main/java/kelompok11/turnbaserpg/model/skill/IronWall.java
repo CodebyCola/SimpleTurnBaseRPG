@@ -14,36 +14,28 @@ import kelompok11.turnbaserpg.utils.GameConstants;
  * @author Pongo
  */
 public class IronWall extends Skill {
-    
+
     public IronWall() {
-        super(
-                "Iron Wall",
-                "Increase defense temporarily",
-                20,
-                10,
-                3,
-                SkillType.DEFEND
-        );
+        super("Iron Wall", "Increase defense temporarily", 20, 10,
+                GameConstants.SKILL_COOLDOWN_MEDIUM, SkillType.DEFEND);
     }
-    
+
+    @Override
     public boolean cast(Character caster, Character target) {
-        
         if (currentCoolDown > 0) {
             System.out.println("Skill is on cooldown!");
             return false;
         }
-        
         if (caster.getStats().getCurrentMana() < manaCost) {
             System.out.println("Not enough mana!");
             return false;
         }
-        
-        caster.getStats().increaseDefenseBonus(effectValue);
+        caster.addBuff(new DefenseBuff(effectValue));
         caster.getStats().decreaseCurrentMana(manaCost);
         currentCoolDown = cooldown;
-        System.out.println("player " + caster.getCharacterName() + " Casting " + this.name);
-        System.out.println("Player gain " + effectValue + " bonus defense stat");
+        System.out.println(caster.getCharacterName() + " casts " + name + "!");
+        System.out.println("Defense +" + effectValue + " for 3 turns.");
         return true;
     }
-    
+
 }

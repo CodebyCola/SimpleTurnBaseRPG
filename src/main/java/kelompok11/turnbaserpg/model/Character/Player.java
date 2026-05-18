@@ -15,16 +15,16 @@ import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- *
- * @author Pongo
+ * Represents a player character.
+ * Extends Character with leveling, gold, floor tracking, and skill management.
  */
 public class Player extends Character {
 
-    private Role role; // Enums role untuk simpan role player
-    private int level; // Level player saat ini
-    private int currentExp; // Exp player saat ini
-    private int maxExp; // Batas exp yang diperlukan untuk naik level
-    private int currentFloor; // Lantai tempat player berada saat ini
+    private Role role;
+    private int level;
+    private int currentExp;
+    private int maxExp;
+    private int currentFloor;
     private int totalGold;
     private int id;
     private String password;
@@ -32,113 +32,50 @@ public class Player extends Character {
     private ArrayList<Skill> unlockedSkills;
 
     public Player(String characterName, Role role) {
-
         super(characterName, createStatsByRole(role));
-
         this.role = role;
-        level = GameConstants.DEFAULT_LEVEL;
-        currentExp = 0;
-        currentFloor = 0;
-        totalGold = GameConstants.INITIAL_GOLD;
-        inventory = new Inventory();
-        maxExp = GameConstants.INITIAL_EXP_REQUIRED;
-        unlockedSkills = new ArrayList<>();
+        this.level = GameConstants.DEFAULT_LEVEL;
+        this.currentExp = 0;
+        this.currentFloor = 0;
+        this.totalGold = GameConstants.INITIAL_GOLD;
+        this.inventory = new Inventory();
+        this.maxExp = GameConstants.INITIAL_EXP_REQUIRED;
+        this.unlockedSkills = new ArrayList<>();
+        // BasicHeal is the default starting skill
         this.unlockSkill(new BasicHeal());
-
     }
 
     public Player() {
         this.stats = new Stats();
         this.inventory = new Inventory();
-    };
-
-    
+        this.unlockedSkills = new ArrayList<>();
+    }
 
     public void getPlayerDetail() {
-        System.out.println("Character name : " + characterName);
-        System.out.println("Role : " + role.getDisplayName());
+        System.out.println("=== CHARACTER INFO ===");
+        System.out.println("Name  : " + characterName);
+        System.out.println("Role  : " + role.getDisplayName());
         System.out.println("Level : " + level);
-        System.out.println("Exp : " + currentExp + " / " + maxExp);
-        System.out.println("Gold Currency : " + totalGold);
-
+        System.out.println("EXP   : " + currentExp + " / " + maxExp);
+        System.out.println("Gold  : " + totalGold);
+        System.out.println("Floor : " + currentFloor);
     }
 
-    public Inventory getInventory() {
-        return inventory;
-    }
+    public void getStatsDetail() { stats.viewDetailStats(); }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public void setLevel(int level) {
-        this.level = level;
-    }
-
-    public void setCurrentExp(int currentExp) {
-        this.currentExp = currentExp;
-    }
-
-    public void setTotalGold(int totalGold) {
-        this.totalGold = totalGold;
-    }
-
-    public void setInventory(Inventory inventory) {
-        this.inventory = inventory;
-    }
-
-    public void setUnlockedSkills(ArrayList<Skill> unlockedSkills) {
-        this.unlockedSkills = unlockedSkills;
-    }
-
-    public void setStats(Stats stats) {
-        this.stats = stats;
-    }
-    
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void getStatsDetail() {
-        stats.viewDetailStats();
-    }
-
-    public int getLevel() {
-        return level;
-    }
-
-    public int getCurrentExp() {
-        return currentExp;
-    }
-
-    public int getMaxExp() {
-        return maxExp;
-    }
-
-    public void setMaxExp(int maxExp) {
-        this.maxExp = maxExp;
-    }
-
-    public int getCurrentFloor() {
-        return currentFloor;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
+    public int getCurrentExp() { return currentExp; }
+    public void setCurrentExp(int currentExp) { this.currentExp = currentExp; }
+    public int getMaxExp() { return maxExp; }
+    public void setMaxExp(int maxExp) { this.maxExp = maxExp; }
+    public int getCurrentFloor() { return currentFloor; }
 
     public void setCurrentFloor(int currentFloor) {
         if (currentFloor > this.currentFloor) {
@@ -146,60 +83,40 @@ public class Player extends Character {
         }
     }
 
-    public int getTotalGold() {
-        return totalGold;
-    }
+    public int getTotalGold() { return totalGold; }
+    public void setTotalGold(int totalGold) { this.totalGold = totalGold; }
+    public Inventory getInventory() { return inventory; }
+    public void setInventory(Inventory inventory) { this.inventory = inventory; }
+    public void setStats(Stats stats) { this.stats = stats; }
+    public ArrayList<Skill> getUnlockedSkills() { return unlockedSkills; }
+    public void setUnlockedSkills(ArrayList<Skill> unlockedSkills) { this.unlockedSkills = unlockedSkills; }
+    public int getTotalUnlockedSkills() { return unlockedSkills.size(); }
 
-    // Fungsi inisialisasi stats berdasarkan role
     private static Stats createStatsByRole(Role role) {
-
         switch (role) {
-
             case WARRIOR:
-
-                return new Stats(
-                        GameConstants.WarriorStats.INITIAL_HP,
-                        GameConstants.WarriorStats.INITIAL_ATK,
-                        GameConstants.WarriorStats.INITIAL_DEF,
-                        GameConstants.WarriorStats.INITIAL_MAGIC,
-                        GameConstants.WarriorStats.INITIAL_MANA
-                );
-
+                return new Stats(GameConstants.WarriorStats.INITIAL_HP, GameConstants.WarriorStats.INITIAL_ATK,
+                    GameConstants.WarriorStats.INITIAL_DEF, GameConstants.WarriorStats.INITIAL_MAGIC, GameConstants.WarriorStats.INITIAL_MANA);
             case MAGE:
-
-                return new Stats(
-                        GameConstants.MageStats.INITIAL_HP,
-                        GameConstants.MageStats.INITIAL_ATK,
-                        GameConstants.MageStats.INITIAL_DEF,
-                        GameConstants.MageStats.INITIAL_MAGIC,
-                        GameConstants.MageStats.INITIAL_MANA);
-
+                return new Stats(GameConstants.MageStats.INITIAL_HP, GameConstants.MageStats.INITIAL_ATK,
+                    GameConstants.MageStats.INITIAL_DEF, GameConstants.MageStats.INITIAL_MAGIC, GameConstants.MageStats.INITIAL_MANA);
             case ARCHER:
-
-                return new Stats(
-                        GameConstants.ArcherStats.INITIAL_HP,
-                        GameConstants.ArcherStats.INITIAL_ATK,
-                        GameConstants.ArcherStats.INITIAL_DEF,
-                        GameConstants.ArcherStats.INITIAL_MAGIC,
-                        GameConstants.ArcherStats.INITIAL_MANA);
-
+                return new Stats(GameConstants.ArcherStats.INITIAL_HP, GameConstants.ArcherStats.INITIAL_ATK,
+                    GameConstants.ArcherStats.INITIAL_DEF, GameConstants.ArcherStats.INITIAL_MAGIC, GameConstants.ArcherStats.INITIAL_MANA);
             default:
-                throw new IllegalArgumentException("Invalid role");
+                throw new IllegalArgumentException("Invalid role: " + role);
         }
     }
 
-//    Method untuk progress character
     public void levelUp() {
         if (this.level >= GameConstants.MAX_LEVEL) {
-            System.out.println("️Already at max level!");
+            System.out.println("Already at max level!");
             return;
         }
-
-        level += 1;
-        GameLogger.info(characterName + " level up");
+        level++;
+        GameLogger.info(characterName + " leveled up to " + level);
         currentExp -= maxExp;
         maxExp = (int) (maxExp * GameConstants.EXP_SCALING_MULTIPLIER);
-
         switch (role) {
             case WARRIOR:
                 stats.increaseBaseHP(GameConstants.WarriorStats.LEVEL_UP_HP_BONUS);
@@ -216,11 +133,13 @@ public class Player extends Character {
                 break;
         }
         stats.boostStats();
+        System.out.println("*** LEVEL UP! You are now Level " + level + " ***");
     }
 
     public void gainExp(int exp) {
-        GameLogger.info(characterName + " gain " + exp + " exp");
+        GameLogger.info(characterName + " gained " + exp + " EXP");
         currentExp += exp;
+        System.out.println("+" + exp + " EXP  (" + currentExp + "/" + maxExp + ")");
         while (currentExp >= maxExp && level < GameConstants.MAX_LEVEL) {
             levelUp();
         }
@@ -229,6 +148,7 @@ public class Player extends Character {
     public void gainGold(int amount) {
         if (amount > 0) {
             totalGold += amount;
+            System.out.println("+" + amount + " Gold  (Total: " + totalGold + ")");
         }
     }
 
@@ -236,48 +156,32 @@ public class Player extends Character {
         if (totalGold >= amount) {
             totalGold -= amount;
             return true;
-        } else {
-            return false;
         }
+        System.out.println("Not enough gold!");
+        return false;
     }
 
-//    Method game system
     public boolean unlockSkill(Skill skill) {
-        for (Skill unlockedSkill : unlockedSkills) {
-
-            if (unlockedSkill.getName().equals(skill.getName())) {
+        for (Skill owned : unlockedSkills) {
+            if (owned.getName().equals(skill.getName())) {
                 return false;
             }
         }
-
         unlockedSkills.add(skill);
         return true;
     }
 
-    public ArrayList<Skill> getUnlockedSkills() {
-        return unlockedSkills;
-    }
-
-    public int getTotalUnlockedSkills() {
-        return unlockedSkills.size();
-    }
-
-//    Player battle system
-    public void setDefend(boolean set) {
-        if (set) {
-            stats.increaseDefenseBonus(GameConstants.DEFEND_BONUS);
-
-        } else {
-            stats.decreaseDefenseBonus(GameConstants.DEFEND_BONUS);
-
-        }
-    }
-
     public void updateSkillCooldowns() {
-
         for (Skill skill : unlockedSkills) {
             skill.reduceCooldown();
         }
     }
 
+    public void setDefend(boolean set) {
+        if (set) {
+            stats.increaseDefenseBonus(GameConstants.DEFEND_BONUS);
+        } else {
+            stats.decreaseDefenseBonus(GameConstants.DEFEND_BONUS);
+        }
+    }
 }

@@ -14,6 +14,7 @@ import kelompok11.turnbaserpg.database.Connector;
 import kelompok11.turnbaserpg.enums.Role;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.character.Stats;
+import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
@@ -22,156 +23,128 @@ import kelompok11.turnbaserpg.utils.GameLogger;
  */
 public class PlayerDAO {
 
-    public void insert(Player p) {
-        String query = "INSERT INTO players (name, password, role, level,"
-                + " exp, gold, floor,  current_hp, current_mp, stat_hp, stat_atk, stat_def,"
-                + "stat_magic, stat_mana) "
+    public void insert(Player player) {
+        String query = "INSERT INTO players "
+                + "(name, password, role, level, exp, gold, floor, "
+                + "current_hp, current_mp, stat_hp, stat_atk, stat_def, stat_magic, stat_mana) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = Connector.connect()) {
-            PreparedStatement ps = conn.prepareStatement(query,
-                    PreparedStatement.RETURN_GENERATED_KEYS);
 
-            ps.setString(1, p.getCharacterName());
-            ps.setString(2, p.getPassword());
-            ps.setString(3, p.getRole().name());
-            ps.setInt(4, p.getLevel());
-            ps.setInt(5, p.getCurrentExp());
-            ps.setInt(6, p.getTotalGold());
-            ps.setInt(7, p.getCurrentFloor());
-            ps.setInt(8, p.getStats().getCurrentHP());
-            ps.setInt(9, p.getStats().getCurrentMana());
-            ps.setInt(10, p.getStats().getMaxHP());
-            ps.setInt(11, p.getStats().getBaseAttack());
-            ps.setInt(12, p.getStats().getBaseDefense());
-            ps.setInt(13, p.getStats().getBaseMagic());
-            ps.setInt(14, p.getStats().getBaseMana());
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, player.getCharacterName());
+            ps.setString(2, player.getPassword());
+            ps.setString(3, player.getRole().name());
+            ps.setInt(4, player.getLevel());
+            ps.setInt(5, player.getCurrentExp());
+            ps.setInt(6, player.getTotalGold());
+            ps.setInt(7, player.getCurrentFloor());
+            ps.setInt(8, player.getStats().getCurrentHP());
+            ps.setInt(9, player.getStats().getCurrentMana());
+            ps.setInt(10, player.getStats().getMaxHP());
+            ps.setInt(11, player.getStats().getBaseAttack());
+            ps.setInt(12, player.getStats().getBaseDefense());
+            ps.setInt(13, player.getStats().getBaseMagic());
+            ps.setInt(14, player.getStats().getBaseMana());
 
             ps.executeUpdate();
 
-            ResultSet rs = ps.getGeneratedKeys();
-
-            if (rs.next()) {
-                p.setId(rs.getInt(1));
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    player.setId(rs.getInt(1));
+                }
             }
-
-            rs.close();
-            ps.close();
-            GameLogger.info("Data player berhasil disimpan");
+            GameLogger.info("Player inserted: " + player.getCharacterName());
         } catch (SQLException e) {
-            GameLogger.debug("Data player gagal disimpan");
-            System.out.println(e.getMessage());
+            GameLogger.error("Failed to insert player: " + e.getMessage());
         }
     }
 
-    public void update(Player p) {
+    public void update(Player player) {
         String query = "UPDATE players SET "
-                + "level = ?,"
-                + "exp = ?,"
-                + "gold = ?,"
-                + "floor = ?,"
-                + "current_hp = ?,"
-                + "current_mp = ?,"
-                + "stat_hp = ?,"
-                + "stat_atk = ?,"
-                + "stat_def = ?,"
-                + "stat_magic = ?,"
-                + "stat_mana = ? "
+                + "level = ?, exp = ?, gold = ?, floor = ?, "
+                + "current_hp = ?, current_mp = ?, "
+                + "stat_hp = ?, stat_atk = ?, stat_def = ?, stat_magic = ?, stat_mana = ? "
                 + "WHERE id = ?";
 
-        try (Connection conn = Connector.connect()) {
-            PreparedStatement ps = conn.prepareStatement(query);
-            ps.setInt(1, p.getLevel());
-            ps.setInt(2, p.getCurrentExp());
-            ps.setInt(3, p.getTotalGold());
-            ps.setInt(4, p.getCurrentFloor());
-            ps.setInt(5, p.getStats().getCurrentHP());
-            ps.setInt(6, p.getStats().getCurrentMana());
-            ps.setInt(7, p.getStats().getMaxHP());
-            ps.setInt(8, p.getStats().getBaseAttack());
-            ps.setInt(9, p.getStats().getBaseDefense());
-            ps.setInt(10, p.getStats().getBaseMagic());
-            ps.setInt(11, p.getStats().getBaseMana());
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
 
-            ps.setInt(12, p.getId());
+            ps.setInt(1, player.getLevel());
+            ps.setInt(2, player.getCurrentExp());
+            ps.setInt(3, player.getTotalGold());
+            ps.setInt(4, player.getCurrentFloor());
+            ps.setInt(5, player.getStats().getCurrentHP());
+            ps.setInt(6, player.getStats().getCurrentMana());
+            ps.setInt(7, player.getStats().getMaxHP());
+            ps.setInt(8, player.getStats().getBaseAttack());
+            ps.setInt(9, player.getStats().getBaseDefense());
+            ps.setInt(10, player.getStats().getBaseMagic());
+            ps.setInt(11, player.getStats().getBaseMana());
+            ps.setInt(12, player.getId());
 
             ps.executeUpdate();
-            ps.close();
-            GameLogger.info("Data berhasil di update");
+            GameLogger.info("Player updated: " + player.getCharacterName());
         } catch (SQLException e) {
-            GameLogger.debug("Data gagal di update");
-            System.out.println(e.getMessage());
+            GameLogger.error("Failed to update player: " + e.getMessage());
         }
     }
 
     public void delete(int id) {
         String query = "DELETE FROM players WHERE id = ?";
-
-        try (Connection conn = Connector.connect()) {
-
-            PreparedStatement ps = conn.prepareStatement(query);
-
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, id);
-
             ps.executeUpdate();
-            ps.close();
-            GameLogger.info("Akun berhasil dihapus");
-
+            GameLogger.info("Player deleted: id=" + id);
         } catch (SQLException e) {
-
-            GameLogger.error("Akun gagal dihapus");
-            System.out.println(e.getMessage());
-
+            GameLogger.error("Failed to delete player: " + e.getMessage());
         }
     }
 
+    /**
+     * Authenticates a player and loads their base data. Inventory and skills
+     * are loaded separately by their respective DAOs.
+     *
+     * @return Player if credentials match, null otherwise.
+     */
     public Player login(String name, String password) {
-        String query = "Select * FROM players where name = ? AND password = ?";
-        Player p = null;
-        try (Connection conn = Connector.connect()) {
-            PreparedStatement ps = conn.prepareStatement(query);
+        String query = "SELECT * FROM players WHERE name = ? AND password = ?";
+
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+
             ps.setString(1, name);
             ps.setString(2, password);
 
-            ResultSet rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Role role = Role.valueOf(rs.getString("role").toUpperCase());
 
-            if (rs.next()) {
-                Role role = Role.valueOf(
-                        rs.getString("role").toUpperCase()
-                );
-                p = new Player();
-                p.setCharacterName(rs.getString("name"));
-                p.setPassword(rs.getString("password"));
-                p.setRole(role);
+                    Stats stats = new Stats(
+                            rs.getInt("stat_hp"),
+                            rs.getInt("stat_atk"),
+                            rs.getInt("stat_def"),
+                            rs.getInt("stat_magic"),
+                            rs.getInt("stat_mana")
+                    );
+                    stats.setCurrentHP(rs.getInt("current_hp"));
+                    stats.setCurrentMana(rs.getInt("current_mp"));
 
-                p.setId(rs.getInt("id"));
-                p.setLevel(rs.getInt("level"));
-                p.setCurrentExp(rs.getInt("exp"));
-                p.setTotalGold(rs.getInt("gold"));
-                p.setCurrentFloor(rs.getInt("floor"));
+                    Player player = new Player();
+                    player.setId(rs.getInt("id"));
+                    player.setCharacterName(rs.getString("name"));
+                    player.setPassword(rs.getString("password"));
+                    player.setRole(role);
+                    player.setLevel(rs.getInt("level"));
+                    player.setCurrentExp(rs.getInt("exp"));
+                    player.setMaxExp((int) (GameConstants.INITIAL_EXP_REQUIRED * Math.pow(1.2, rs.getInt("level") - 1)));
+                    player.setTotalGold(rs.getInt("gold"));
+                    player.setCurrentFloor(rs.getInt("floor"));
+                    player.setStats(stats);
 
-                Stats stats = new Stats(
-                        rs.getInt("stat_hp"),
-                        rs.getInt("stat_atk"),
-                        rs.getInt("stat_def"),
-                        rs.getInt("stat_magic"),
-                        rs.getInt("stat_mana")
-                );
-
-                stats.setCurrentHP(
-                        rs.getInt("current_hp")
-                );
-
-                stats.setCurrentMana(
-                        rs.getInt("current_mp")
-                );
-
-                p.setStats(stats);
-                return p;
+                    GameLogger.info("Login successful: " + name);
+                    return player;
+                }
             }
-            rs.close();
-            ps.close();
         } catch (SQLException e) {
-            GameLogger.debug("Failed to take data");
+            GameLogger.error("Login error: " + e.getMessage());
         }
 
         return null;
