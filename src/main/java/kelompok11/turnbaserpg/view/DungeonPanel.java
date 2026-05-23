@@ -7,23 +7,15 @@ import java.util.List;
 
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.enums.Difficulty;
-import kelompok11.turnbaserpg.game.controller.BattleController;
+import kelompok11.turnbaserpg.game.controller.DungeonSessionController;
 import kelompok11.turnbaserpg.game.controller.GameController;
-import kelompok11.turnbaserpg.game.services.BattleEvent;
 import kelompok11.turnbaserpg.game.services.DungeonEvent;
 import kelompok11.turnbaserpg.game.services.DungeonService;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 
-/**
- * DungeonPanel — mengelola dungeon loop secara manual di background thread.
- *
- * Arsitektur yang diperbaiki:
- * - DungeonService dipakai LANGSUNG (bukan DungeonController) agar kita
- *   bisa kontrol kapan battle dimulai dan BattlePanel mendapat Enemy-nya.
- * - BattlePanel ditampilkan dengan enemy yang benar setiap wave.
- * - Advance prompt menggunakan Object.wait()/notify() di background thread.
- */
+// DungeonPanel — manages the dungeon loop on a background thread.
+// All dungeon service calls are routed through DungeonSessionController.
 public class DungeonPanel extends JPanel {
 
     private final GameController gameController;
@@ -60,8 +52,8 @@ public class DungeonPanel extends JPanel {
     private final Object battleLock = new Object();
     private volatile boolean battleDone = false;
 
-    // Current DungeonService
-    private DungeonService dungeonService;
+    // Controller for all dungeon service operations
+    private DungeonSessionController dungeonController;
 
     public DungeonPanel(GameController gameController, Player player, Runnable onDungeonEnd) {
         this.gameController = gameController;
@@ -82,9 +74,8 @@ public class DungeonPanel extends JPanel {
         cardHolder.setBackground(RPGTheme.BG_DARKEST);
         cardHolder.add(buildLogCard(), CARD_LOG);
 
-        // BattlePanel: onBattleEnd dipanggil saat battle selesai
+        // BattlePanel notifies via battleLock when battle ends
         battlePanel = new BattlePanel(() -> {
-            // Battle selesai — beri tahu dungeon thread
             synchronized (battleLock) {
                 battleDone = true;
                 battleLock.notifyAll();
@@ -176,8 +167,9 @@ public class DungeonPanel extends JPanel {
     // Start dungeon loop
     // ======================================================
     public void startDungeon() {
-        dungeonService = new DungeonService(player);
-        dungeonService.initDungeon();
+        // Create controller — all service access goes through it
+        dungeonController = new DungeonSessionController(player);
+        dungeonController.initDungeon();
         refreshStatusBar();
         appendLog("=== Memasuki Dungeon ===", RPGTheme.ACCENT_GOLD, true);
 
@@ -187,36 +179,33 @@ public class DungeonPanel extends JPanel {
     }
 
     // ======================================================
-    // Dungeon loop (runs on background thread)
+    // Dungeon loop (background thread) — all calls via controller
     // ======================================================
     private void dungeonLoop() {
-        while (dungeonService.hasMoreFloors()) {
-            int floor = dungeonService.getCurrentFloor();
-            boolean isBoss = dungeonService.isBossFloor(floor);
-            Difficulty diff = dungeonService.determineDifficulty(floor);
+        while (dungeonController.hasMoreFloors()) {
+            int floor = dungeonController.getCurrentFloor();
+            boolean isBoss = dungeonController.isBossFloor(floor);
+            Difficulty diff = dungeonController.determineDifficulty(floor);
 
-            // ---- Floor start ----
-            dispatchDungeonEvents(dungeonService.buildFloorStartEvents(floor, isBoss, diff));
+            // Floor start events
+            dispatchDungeonEvents(dungeonController.buildFloorStartEvents(floor, isBoss, diff));
 
-            // ---- Wave loop ----
             boolean floorCleared = runFloor(floor, isBoss, diff);
 
             if (!floorCleared) {
-                // Player kalah atau kabur
                 appendLog("\nGame Over! Kembali ke menu utama...", RPGTheme.HP_RED, true);
                 sleep(2000);
                 SwingUtilities.invokeLater(this::endDungeonSession);
                 return;
             }
 
-            // ---- Skill reward ----
-            dispatchDungeonEvents(dungeonService.applySkillReward(floor));
+            // Skill reward
+            dispatchDungeonEvents(dungeonController.applySkillReward(floor));
 
-            // ---- Advance floor ----
-            List<DungeonEvent> advEvents = dungeonService.advanceFloor();
+            // Advance floor counter
+            List<DungeonEvent> advEvents = dungeonController.advanceFloor();
             dispatchDungeonEvents(advEvents);
 
-            // Cek dungeon complete
             boolean complete = advEvents.stream()
                 .anyMatch(e -> e.getType() == DungeonEvent.Type.DUNGEON_COMPLETE);
             if (complete) {
@@ -225,10 +214,10 @@ public class DungeonPanel extends JPanel {
                 return;
             }
 
-            if (!dungeonService.hasMoreFloors()) break;
+            if (!dungeonController.hasMoreFloors()) break;
 
-            // ---- Tanya mau lanjut? ----
-            askAdvance(dungeonService.getCurrentFloor());
+            // Ask player to advance
+            askAdvance(dungeonController.getCurrentFloor());
             if (!advanceDecision) {
                 appendLog("\nAnda memilih untuk mundur. Sampai jumpa!", RPGTheme.ACCENT_SILVER, false);
                 sleep(1000);
@@ -239,61 +228,48 @@ public class DungeonPanel extends JPanel {
     }
 
     private boolean runFloor(int floor, boolean isBoss, Difficulty diff) {
-        int totalWaves = dungeonService.wavesForFloor(isBoss);
+        int totalWaves = dungeonController.wavesForFloor(isBoss);
 
         for (int wave = 1; wave <= totalWaves; wave++) {
-            // Generate enemy
+            // Controller generates enemy
             Enemy enemy = isBoss
-                ? dungeonService.generateBossEnemy(diff)
-                : dungeonService.generateEnemy(diff);
-            dungeonService.scaleEnemyStats(enemy, diff, isBoss);
+                ? dungeonController.generateBossEnemy(diff)
+                : dungeonController.generateEnemy(diff);
+            dungeonController.scaleEnemyStats(enemy, diff, isBoss);
 
-            // Log wave start
-            dispatchDungeonEvents(dungeonService.buildWaveStartEvents(wave, totalWaves, enemy, isBoss));
+            dispatchDungeonEvents(dungeonController.buildWaveStartEvents(wave, totalWaves, enemy, isBoss));
 
-            // ---- Mulai battle di BattlePanel ----
             BattleResult result = runBattle(enemy);
 
-            // Proses hasil battle
-            DungeonService.FloorOutcome outcome = dungeonService.processBattleResult(result);
+            DungeonService.FloorOutcome outcome = dungeonController.processBattleResult(result);
             dispatchDungeonEvents(outcome.getEvents());
 
             if (!outcome.isWaveCleared()) {
                 return false;
             }
 
-            // Jeda sebentar antar wave
             if (wave < totalWaves) {
                 sleep(600);
             }
         }
 
         dispatchDungeonEvents(List.of(
-            new DungeonEvent(DungeonEvent.Type.FLOOR_CLEARED,
-                " Floor " + floor + " cleared!")
+            new DungeonEvent(DungeonEvent.Type.FLOOR_CLEARED, " Floor " + floor + " cleared!")
         ));
         return true;
     }
 
-    /**
-     * Jalankan satu battle:
-     * 1. Switch ke BattlePanel dengan enemy yang benar
-     * 2. Tunggu BattlePanel selesai (via battleLock)
-     * 3. Return hasil
-     */
+    // Runs a single battle by showing BattlePanel and blocking until done
     private BattleResult runBattle(Enemy enemy) {
-        // Reset flag
         synchronized (battleLock) {
             battleDone = false;
         }
 
-        // Start battle di EDT
         SwingUtilities.invokeLater(() -> {
             showCard(CARD_BATTLE);
             battlePanel.startBattle(player, enemy);
         });
 
-        // Block background thread sampai battle selesai
         synchronized (battleLock) {
             while (!battleDone) {
                 try { battleLock.wait(); }
@@ -301,10 +277,8 @@ public class DungeonPanel extends JPanel {
             }
         }
 
-        // Ambil hasil dari BattlePanel
         BattleResult result = battlePanel.getLastResult();
 
-        // Kembali ke log card
         SwingUtilities.invokeLater(() -> showCard(CARD_LOG));
         sleep(300);
 
@@ -350,14 +324,14 @@ public class DungeonPanel extends JPanel {
         ((CardLayout) cardHolder.getLayout()).show(cardHolder, name);
     }
 
+    // Status bar refresh reads from controller snapshot — no direct Player access
     private void refreshStatusBar() {
-        int floor = dungeonService != null
-            ? dungeonService.getCurrentFloor()
-            : player.getCurrentFloor();
+        if (dungeonController == null) return;
+        DungeonSessionController.PlayerStatusSnapshot snap = dungeonController.getPlayerStatusSnapshot();
         SwingUtilities.invokeLater(() -> {
-            floorLabel.setText("DUNGEON — Floor " + floor + " / 100");
-            hpBar.setValues(player.getStats().getCurrentHP(), player.getStats().getMaxHP());
-            mpBar.setValues(player.getStats().getCurrentMana(), player.getStats().getBaseMana());
+            floorLabel.setText("DUNGEON — Floor " + snap.floor() + " / 100");
+            hpBar.setValues(snap.currentHp(), snap.maxHp());
+            mpBar.setValues(snap.currentMana(), snap.maxMana());
         });
     }
 
@@ -409,4 +383,5 @@ public class DungeonPanel extends JPanel {
             default               -> RPGTheme.TEXT_PRIMARY;
         };
     }
+
 }

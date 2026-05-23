@@ -41,4 +41,8 @@ public class SaveManager {
         GameLogger.info("Game saved for player: " + player.getCharacterName());
         System.out.println("Game saved successfully!");
     }
+    
+    public boolean cekUserName(String name) {
+        return playerDAO.cekUserName(name);
+    }
 }

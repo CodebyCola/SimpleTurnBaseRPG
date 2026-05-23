@@ -8,8 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import kelompok11.turnbaserpg.database.Connector;
 import kelompok11.turnbaserpg.enums.Role;
 import kelompok11.turnbaserpg.model.character.Player;
@@ -99,12 +97,6 @@ public class PlayerDAO {
         }
     }
 
-    /**
-     * Authenticates a player and loads their base data. Inventory and skills
-     * are loaded separately by their respective DAOs.
-     *
-     * @return Player if credentials match, null otherwise.
-     */
     public Player login(String name, String password) {
         String query = "SELECT * FROM players WHERE name = ? AND password = ?";
 
@@ -148,6 +140,22 @@ public class PlayerDAO {
         }
 
         return null;
+    }
+
+    public boolean cekUserName(String name) {
+        String query = "SELECT 1 FROM players WHERE name = ? LIMIT 1";
+
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, name);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            GameLogger.error("cekUserName error: " + e.getMessage());
+            return false;
+        }
     }
 
 }

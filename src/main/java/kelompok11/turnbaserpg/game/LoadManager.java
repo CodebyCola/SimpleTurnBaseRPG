@@ -25,14 +25,6 @@ public class LoadManager {
         this.skillsDAO = new SkillsDAO();
     }
 
-    /**
-     * Authenticates and loads a complete player from the database, including
-     * their inventory and unlocked skills.
-     *
-     * @param name player username
-     * @param password player password
-     * @return fully loaded Player, or null if login failed
-     */
     public Player load(String name, String password) {
         Player player = playerDAO.login(name, password);
         if (player == null) {
