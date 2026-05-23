@@ -219,11 +219,11 @@ public class BattlePanel extends JPanel {
         actions.setOpaque(false);
         actions.setLayout(new BoxLayout(actions, BoxLayout.Y_AXIS));
 
-        attackBtn = makeActionBtn("⚔  Basic Attack",  RPGTheme.ACCENT_EMBER);
-        defendBtn = makeActionBtn("🛡  Defend",        RPGTheme.ACCENT_SILVER);
-        skillBtn  = makeActionBtn("✨  Use Skill  ▾",  RPGTheme.EXP_PURPLE);
-        itemBtn   = makeActionBtn("🎒  Use Item  ▾",   RPGTheme.HP_GREEN);
-        escapeBtn = makeActionBtn("💨  Escape",        RPGTheme.TEXT_SECONDARY);
+        attackBtn = makeActionBtn("  Basic Attack",  RPGTheme.ACCENT_EMBER);
+        defendBtn = makeActionBtn("  Defend",        RPGTheme.ACCENT_SILVER);
+        skillBtn  = makeActionBtn("  Use Skill  ▾",  RPGTheme.EXP_PURPLE);
+        itemBtn   = makeActionBtn("  Use Item  ▾",   RPGTheme.HP_GREEN);
+        escapeBtn = makeActionBtn("  Escape",        RPGTheme.TEXT_SECONDARY);
 
         // Sub panels
         skillSubPanel = new JPanel();

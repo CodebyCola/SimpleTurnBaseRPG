@@ -88,10 +88,10 @@ public class RPGTheme {
     public static String roleIcon(String role) {
         if (role == null) return "⚔";
         return switch (role.toUpperCase()) {
-            case "WARRIOR" -> "🛡";
-            case "MAGE"    -> "🔮";
-            case "ARCHER"  -> "🏹";
-            default        -> "⚔";
+            case "WARRIOR" -> " ";
+            case "MAGE"    -> " ";
+            case "ARCHER"  -> " ";
+            default        -> " ";
         };
     }
 }

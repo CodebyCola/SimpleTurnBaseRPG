@@ -158,8 +158,8 @@ public class DungeonPanel extends JPanel {
 
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         btnRow.setOpaque(false);
-        retreatBtn = new RPGComponents.RPGButton("⬅  Retreat", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARK);
-        advanceBtn = new RPGComponents.RPGButton("Advance ➡", RPGTheme.ACCENT_GOLD,  RPGTheme.BG_DARK);
+        retreatBtn = new RPGComponents.RPGButton("←  Retreat", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARK);
+        advanceBtn = new RPGComponents.RPGButton("Advance →", RPGTheme.ACCENT_GOLD,  RPGTheme.BG_DARK);
         retreatBtn.setPreferredSize(new Dimension(130, 38));
         advanceBtn.setPreferredSize(new Dimension(130, 38));
 
@@ -270,7 +270,7 @@ public class DungeonPanel extends JPanel {
 
         dispatchDungeonEvents(List.of(
             new DungeonEvent(DungeonEvent.Type.FLOOR_CLEARED,
-                "✓ Floor " + floor + " cleared!")
+                " Floor " + floor + " cleared!")
         ));
         return true;
     }

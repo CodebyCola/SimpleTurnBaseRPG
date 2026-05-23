@@ -252,7 +252,7 @@ public class LoginPanel extends JPanel {
         regName     = new RPGComponents.RPGTextField(20);
         regPassword = new RPGComponents.RPGPasswordField(20);
 
-        String[] roles = {"⚔  WARRIOR", "🔮  MAGE", "🏹  ARCHER"};
+        String[] roles = {"  WARRIOR", "  MAGE", "  ARCHER"};
         roleCombo = new JComboBox<>(roles);
         roleCombo.setBackground(RPGTheme.BG_DARKEST);
         roleCombo.setForeground(RPGTheme.TEXT_PRIMARY);

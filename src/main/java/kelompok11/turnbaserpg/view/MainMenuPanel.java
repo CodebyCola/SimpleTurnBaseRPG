@@ -50,7 +50,7 @@ public class MainMenuPanel extends JPanel {
             roleLabel.setText(RPGTheme.roleIcon(role) + "  " + role);
             roleLabel.setForeground(RPGTheme.roleColor(role));
         }
-        if (goldLabel  != null) goldLabel.setText("⚜  " + gold + " Gold");
+        if (goldLabel  != null) goldLabel.setText("  " + gold + " Gold");
         if (floorLabel != null) floorLabel.setText("Floor " + floor + " / 100");
         if (hpBar   != null) hpBar.setValues(hp, maxHp);
         if (manaBar != null) manaBar.setValues(mana, maxMana);
@@ -122,13 +122,13 @@ public class MainMenuPanel extends JPanel {
         bar.setBackground(RPGTheme.BG_DARK);
         bar.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
 
-        bar.add(RPGComponents.goldLabel("⚔  DUNGEON REALM", RPGTheme.FONT_HEADING),
+        bar.add(RPGComponents.goldLabel("  DUNGEON REALM", RPGTheme.FONT_HEADING),
             BorderLayout.WEST);
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         right.setOpaque(false);
 
-        goldLabel = RPGComponents.goldLabel("⚜  0 Gold", RPGTheme.FONT_BODY_BOLD);
+        goldLabel = RPGComponents.goldLabel("  0 Gold", RPGTheme.FONT_BODY_BOLD);
         right.add(goldLabel);
 
         RPGComponents.RPGButton logoutBtn = new RPGComponents.RPGButton(
@@ -176,7 +176,7 @@ public class MainMenuPanel extends JPanel {
         avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         nameLabel  = centeredLabel("Hero",       RPGTheme.TEXT_GOLD,    RPGTheme.FONT_HEADING);
-        roleLabel  = centeredLabel("⚔  WARRIOR", RPGTheme.WARRIOR_COLOR, RPGTheme.FONT_SUB);
+        roleLabel  = centeredLabel("  WARRIOR", RPGTheme.WARRIOR_COLOR, RPGTheme.FONT_SUB);
         levelLabel = centeredLabel("Level 1",    RPGTheme.ACCENT_SILVER, RPGTheme.FONT_BODY_BOLD);
         floorLabel = centeredLabel("Floor 1/100",RPGTheme.TEXT_SECONDARY,RPGTheme.FONT_SMALL);
 
@@ -227,33 +227,33 @@ public class MainMenuPanel extends JPanel {
 
         // Enter Dungeon
         RPGComponents.RPGButton dungeonBtn = makeMenuBtn(
-            "⚔   Enter Dungeon", RPGTheme.ACCENT_GOLD);
+            "   Enter Dungeon", RPGTheme.ACCENT_GOLD);
         dungeonBtn.addActionListener(e -> { if (onEnterDungeon != null) onEnterDungeon.run(); });
         gbc.gridy = 1;
         panel.add(dungeonBtn, gbc);
 
         // Inventory
         RPGComponents.RPGButton invBtn = makeMenuBtn(
-            "🎒   Inventory", RPGTheme.ACCENT_SILVER);
+            "   Inventory", RPGTheme.ACCENT_SILVER);
         invBtn.addActionListener(e -> showInventoryDialog());
         gbc.gridy = 2;
         panel.add(invBtn, gbc);
 
         // Skills
         RPGComponents.RPGButton skillBtn = makeMenuBtn(
-            "✨   Skills", RPGTheme.EXP_PURPLE.brighter());
+            "   Skills", RPGTheme.EXP_PURPLE.brighter());
         skillBtn.addActionListener(e -> showSkillsDialog());
         gbc.gridy = 3;
         panel.add(skillBtn, gbc);
 
         gbc.gridy = 4; gbc.ipady = 0;
-        JLabel sep = RPGComponents.label("────  ⚜  ────", RPGTheme.TEXT_DISABLED, RPGTheme.FONT_SMALL);
+        JLabel sep = RPGComponents.label("────  x  ────", RPGTheme.TEXT_DISABLED, RPGTheme.FONT_SMALL);
         sep.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(sep, gbc);
 
         // Logout
         gbc.gridy = 5; gbc.ipady = 8;
-        RPGComponents.RPGButton logoutBtn = makeMenuBtn("⬅   Logout", RPGTheme.ACCENT_EMBER);
+        RPGComponents.RPGButton logoutBtn = makeMenuBtn("←   Logout", RPGTheme.ACCENT_EMBER);
         logoutBtn.addActionListener(e -> { if (onLogout != null) onLogout.run(); });
         panel.add(logoutBtn, gbc);
 
@@ -285,7 +285,7 @@ public class MainMenuPanel extends JPanel {
     // Inventory Dialog
     // ======================================================
     private void showInventoryDialog() {
-        JDialog dialog = makeDialog("📦  Inventory");
+        JDialog dialog = makeDialog("  Inventory");
 
         if (currentPlayer == null) {
             dialog.add(RPGComponents.label("Tidak ada data player.", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_BODY));
@@ -346,7 +346,7 @@ public class MainMenuPanel extends JPanel {
     // Skills Dialog
     // ======================================================
     private void showSkillsDialog() {
-        JDialog dialog = makeDialog("✨  Skill List");
+        JDialog dialog = makeDialog("  Skill List");
 
         if (currentPlayer == null) {
             dialog.add(RPGComponents.label("Tidak ada data player.", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_BODY));
