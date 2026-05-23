@@ -64,15 +64,20 @@ public class BattleService {
         events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
                 "--- Enemy Turn: " + enemy.getCharacterName() + " ---"));
 
+        int dmg;
         if (enemyTurnCounter % 3 == 0) {
-            enemy.skillAttack(player);
+            dmg = enemy.skillAttack(player);
             events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
-                    enemy.getCharacterName() + " used a skill attack!"));
+                    enemy.getCharacterName() + " used a skill attack for " + dmg + " damage!"));
         } else {
-            enemy.basicAttack(player);
+            dmg = enemy.basicAttack(player);
             events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
-                    enemy.getCharacterName() + " attacked!"));
+                    enemy.getCharacterName() + " attacked for " + dmg + " damage!"));
         }
+        GameLogger.info("[DAMAGE TAKEN] " + enemy.getCharacterName()
+                + " -> " + player.getCharacterName() + ": " + dmg + " dmg"
+                + " | Player HP: " + player.getStats().getCurrentHP()
+                + "/" + player.getStats().getMaxHP());
 
         events.add(new BattleEvent(BattleEvent.Type.PLAYER_STATUS,
                 String.format("Player HP: %d/%d",
@@ -90,12 +95,17 @@ public class BattleService {
     // Player Actions (called by BattleController based on user input)
     // Returns null if the action was invalid and the turn should NOT advance.
     public List<BattleEvent> actionBasicAttack() {
-        player.basicAttack(enemy);
+        int dmg = player.basicAttack(enemy);
         List<BattleEvent> events = new ArrayList<>();
         events.add(new BattleEvent(BattleEvent.Type.ACTION_RESULT,
-                player.getCharacterName() + " attacked " + enemy.getCharacterName() + "!"
+                player.getCharacterName() + " attacked " + enemy.getCharacterName()
+                + " for " + dmg + " damage!"
                 + "  Enemy HP: " + enemy.getStats().getCurrentHP()
                 + "/" + enemy.getStats().getMaxHP()));
+        GameLogger.info("[DAMAGE DEALT] " + player.getCharacterName()
+                + " -> " + enemy.getCharacterName() + ": " + dmg + " dmg"
+                + " | Enemy HP: " + enemy.getStats().getCurrentHP()
+                + "/" + enemy.getStats().getMaxHP());
         return events;
     }
 
@@ -132,7 +142,15 @@ public class BattleService {
         }
 
         events.add(new BattleEvent(BattleEvent.Type.SKILL_CAST,
-                player.getCharacterName() + " cast " + skill.getName() + "!"));
+                player.getCharacterName() + " cast " + skill.getName() + "!"
+                + "  Enemy HP: " + enemy.getStats().getCurrentHP()
+                + "/" + enemy.getStats().getMaxHP()
+                + "  Player HP: " + player.getStats().getCurrentHP()
+                + "/" + player.getStats().getMaxHP()));
+        GameLogger.info("[SKILL CAST] " + player.getCharacterName()
+                + " used " + skill.getName()
+                + " | Enemy HP: " + enemy.getStats().getCurrentHP()
+                + "/" + enemy.getStats().getMaxHP());
         return events;
     }
 
@@ -173,13 +191,10 @@ public class BattleService {
         return enemy.isAlive() && player.isAlive() && !isEscaped;
     }
 
-    public boolean isPlayerTurn() {
-        return playerTurn;
-    }
-
-    public void setPlayerTurn(boolean v) {
-        this.playerTurn = v;
-    }
+    public boolean isPlayerTurn() { return playerTurn; }
+    public void setPlayerTurn(boolean v) { this.playerTurn = v; }
+    public Player getPlayer() { return player; }
+    public Enemy getEnemy() { return enemy; }
 
     // Battle Resolution
     public BattleResult resolveBattle() {
@@ -205,21 +220,39 @@ public class BattleService {
     }
 
     private void applyWinRewards() {
+        // BUG FIX: old formula used (level * 0.1) which gave ~5 EXP at level 1.
+        // Correct formula scales rewards properly with player level.
         int exp = (int) (GameConstants.BASE_EXP_REWARD
-                * GameConstants.EXP_SCALING_PER_LEVEL * (player.getLevel() * 0.1));
+                * Math.pow(GameConstants.EXP_SCALING_PER_LEVEL, player.getLevel() - 1));
+
+        int levelBefore = player.getLevel();
         player.gainExp(exp);
+        int levelAfter = player.getLevel();
+
+        GameLogger.info("[EXP REWARD] " + player.getCharacterName()
+                + " gained " + exp + " EXP"
+                + " | Total EXP: " + player.getCurrentExp() + "/" + player.getMaxExp());
+
+        if (levelAfter > levelBefore) {
+            GameLogger.info("[LEVEL UP] " + player.getCharacterName()
+                    + " leveled up: " + levelBefore + " -> " + levelAfter);
+        }
 
         if (Math.random() < 0.3) {
             int gold = (int) (GameConstants.BASE_GOLD_REWARD
                     * GameConstants.GOLD_SCALING_PER_LEVEL * player.getLevel());
             player.gainGold(gold);
+            GameLogger.info("[GOLD REWARD] " + player.getCharacterName()
+                    + " gained " + gold + " gold");
         }
 
         if (Math.random() < GameConstants.LOOT_DROP_RATE) {
             if (Math.random() < 0.5) {
                 player.getInventory().addItem(new HealthPotion(SMALL));
+                GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Health Potion");
             } else {
                 player.getInventory().addItem(new ManaPotion(SMALL));
+                GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Mana Potion");
             }
         }
     }

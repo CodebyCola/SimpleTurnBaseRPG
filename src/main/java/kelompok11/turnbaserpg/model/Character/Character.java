@@ -46,18 +46,17 @@ public abstract class Character {
         return stats.getCurrentHP() > 0;
     }
 
-    public void takeDamage(int damage) {
-        stats.takeDamage(damage);
+    public int basicAttack(Character target) {
+        int totalAttack = stats.getTotalAttack();
+        return target.takeDamage(totalAttack);
+    }
+
+    public int takeDamage(int damage) {
+        return stats.takeDamage(damage);
     }
 
     public void heal(int amount) {
         stats.heal(amount);
-    }
-
-    public void basicAttack(Character target) {
-        int totalAttack = stats.getTotalAttack();
-
-        target.takeDamage(totalAttack);
     }
 
     // Buff Systems

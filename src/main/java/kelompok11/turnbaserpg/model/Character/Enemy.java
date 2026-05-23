@@ -27,12 +27,12 @@ public class Enemy extends Character {
     /**
      * Used every 3rd enemy turn — deals scaled damage based on attack stat.
      */
-    public void skillAttack(Character target) {
+    public int skillAttack(Character target) {
         double multiplier = ThreadLocalRandom.current().nextDouble(
                 GameConstants.ENEMY_SKILL_MIN_MULTIPLIER,
                 GameConstants.ENEMY_SKILL_MAX_MULTIPLIER
         );
         int damage = (int) (stats.getTotalAttack() * multiplier);
-        target.takeDamage(damage);
+        return target.takeDamage(damage);
     }
 }

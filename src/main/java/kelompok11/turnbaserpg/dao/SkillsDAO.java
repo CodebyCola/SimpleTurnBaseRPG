@@ -23,12 +23,13 @@ public class SkillsDAO {
         String deleteQuery = "DELETE FROM player_skills WHERE player_id = ?";
         String insertQuery = "INSERT INTO player_skills (player_id, skill_name) VALUES (?, ?)";
 
-        try (Connection conn = Connector.connect()) {
-            PreparedStatement deletePs = conn.prepareStatement(deleteQuery);
+        try (Connection conn = Connector.connect();
+             PreparedStatement deletePs = conn.prepareStatement(deleteQuery);
+             PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
+
             deletePs.setInt(1, player.getId());
             deletePs.executeUpdate();
 
-            PreparedStatement insertPs = conn.prepareStatement(insertQuery);
             for (var skill : player.getUnlockedSkills()) {
                 insertPs.setInt(1, player.getId());
                 insertPs.setString(2, skill.getName());
@@ -43,18 +44,20 @@ public class SkillsDAO {
 
     public void read(Player player) {
         String query = "SELECT skill_name FROM player_skills WHERE player_id = ?";
-        try (Connection conn = Connector.connect()) {
-            PreparedStatement ps = conn.prepareStatement(query);
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
             ps.setInt(1, player.getId());
-            ResultSet rs = ps.executeQuery();
 
-            player.getUnlockedSkills().clear();
+            try (ResultSet rs = ps.executeQuery()) {
+                player.getUnlockedSkills().clear();
 
-            while (rs.next()) {
-                String skillName = rs.getString("skill_name");
-                Skill skill = createSkillByName(skillName);
-                if (skill != null) {
-                    player.unlockSkill(skill);
+                while (rs.next()) {
+                    String skillName = rs.getString("skill_name");
+                    Skill skill = createSkillByName(skillName);
+                    if (skill != null) {
+                        player.unlockSkill(skill);
+                    }
                 }
             }
             GameLogger.info("Skills loaded for player " + player.getCharacterName());
