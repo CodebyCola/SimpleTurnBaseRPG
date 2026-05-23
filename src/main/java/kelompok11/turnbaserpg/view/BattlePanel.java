@@ -7,25 +7,17 @@ import java.util.List;
 
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.game.controller.BattleController;
+import kelompok11.turnbaserpg.game.controller.BattleViewController;
 import kelompok11.turnbaserpg.game.services.BattleEvent;
 import kelompok11.turnbaserpg.model.character.Enemy;
-import kelompok11.turnbaserpg.model.character.InventorySlot;
 import kelompok11.turnbaserpg.model.character.Player;
-import kelompok11.turnbaserpg.model.skill.Skill;
 
-/**
- * BattlePanel — tampilan pertarungan player vs enemy.
- *
- * Cara pakai:
- *   battlePanel.startBattle(player, enemy);
- *   // Ketika selesai, onBattleEnd.run() dipanggil
- *   // Ambil hasil: battlePanel.getLastResult()
- */
+// BattlePanel — tampilan pertarungan player vs enemy.
 public class BattlePanel extends JPanel {
 
-    private Player player;
-    private Enemy  enemy;
     private BattleController battleController;
+    // Controller for stat snapshots — no direct model access from this view
+    private final BattleViewController viewController = new BattleViewController();
     private BattleResult lastResult;
 
     // Callback saat battle selesai
@@ -56,8 +48,8 @@ public class BattlePanel extends JPanel {
     // Start / Reset battle
     // ======================================================
     public void startBattle(Player player, Enemy enemy) {
-        this.player     = player;
-        this.enemy      = enemy;
+        // Give the view controller the context — view never holds model refs directly
+        viewController.setContext(player, enemy);
         this.lastResult = null;
 
         // Reset UI
@@ -70,7 +62,7 @@ public class BattlePanel extends JPanel {
         refreshPlayerStats();
         refreshEnemyStats();
 
-        // Wire controller
+        // Wire battle controller
         battleController = new BattleController(player, enemy, this::handleEvents);
         battleController.startBattle();
     }
@@ -89,7 +81,6 @@ public class BattlePanel extends JPanel {
             if (battleController != null && battleController.isBattleOver()) {
                 lastResult = battleController.getResult();
                 setActionsEnabled(false);
-                // Jeda agar player membaca log, lalu panggil callback
                 Timer t = new Timer(1800, ev -> {
                     if (onBattleEnd != null) onBattleEnd.run();
                 });
@@ -221,11 +212,10 @@ public class BattlePanel extends JPanel {
 
         attackBtn = makeActionBtn("  Basic Attack",  RPGTheme.ACCENT_EMBER);
         defendBtn = makeActionBtn("  Defend",        RPGTheme.ACCENT_SILVER);
-        skillBtn  = makeActionBtn("  Use Skill  ▾",  RPGTheme.EXP_PURPLE);
-        itemBtn   = makeActionBtn("  Use Item  ▾",   RPGTheme.HP_GREEN);
+        skillBtn  = makeActionBtn("  Use Skill ",  RPGTheme.EXP_PURPLE);
+        itemBtn   = makeActionBtn("  Use Item ",   RPGTheme.HP_GREEN);
         escapeBtn = makeActionBtn("  Escape",        RPGTheme.TEXT_SECONDARY);
 
-        // Sub panels
         skillSubPanel = new JPanel();
         skillSubPanel.setOpaque(false);
         skillSubPanel.setLayout(new BoxLayout(skillSubPanel, BoxLayout.Y_AXIS));
@@ -296,23 +286,22 @@ public class BattlePanel extends JPanel {
     }
 
     // ======================================================
-    // Populate skill / item sub-panels
+    // Populate skill / item sub-panels via controller
     // ======================================================
     private void populateSkillPanel() {
         skillSubPanel.removeAll();
-        if (player == null) return;
 
-        List<Skill> skills = player.getUnlockedSkills();
+        List<BattleViewController.SkillInfo> skills = viewController.getSkillInfoList();
         if (skills.isEmpty()) {
             skillSubPanel.add(disabledLabel("  Belum ada skill"));
         } else {
+            int currentMana = viewController.getPlayerCurrentMana();
             for (int i = 0; i < skills.size(); i++) {
-                Skill sk = skills.get(i);
-                boolean onCd   = sk.getCurrentCooldown() > 0;
-                boolean noMana = player.getStats().getCurrentMana() < sk.getManaCost();
-                String cdText  = onCd ? "  [CD:" + sk.getCurrentCooldown() + "]" : "";
-                String txt = "  " + sk.getName()
-                    + "  (MP:" + sk.getManaCost() + ")" + cdText;
+                BattleViewController.SkillInfo sk = skills.get(i);
+                boolean onCd   = sk.currentCooldown() > 0;
+                boolean noMana = currentMana < sk.manaCost();
+                String cdText  = onCd ? "  [CD:" + sk.currentCooldown() + "]" : "";
+                String txt = "  " + sk.name() + "  (MP:" + sk.manaCost() + ")" + cdText;
 
                 final int idx = i;
                 RPGComponents.RPGButton b = makeSubBtn(txt, RPGTheme.EXP_PURPLE);
@@ -332,15 +321,14 @@ public class BattlePanel extends JPanel {
 
     private void populateItemPanel() {
         itemSubPanel.removeAll();
-        if (player == null) return;
 
-        List<InventorySlot> slots = player.getInventory().getSlots();
-        if (slots.isEmpty()) {
+        List<BattleViewController.ItemInfo> items = viewController.getItemInfoList();
+        if (items.isEmpty()) {
             itemSubPanel.add(disabledLabel("  Inventory kosong"));
         } else {
-            for (int i = 0; i < slots.size(); i++) {
-                InventorySlot slot = slots.get(i);
-                String txt = "  " + slot.getItem().getName() + "  x" + slot.getQuantity();
+            for (int i = 0; i < items.size(); i++) {
+                BattleViewController.ItemInfo item = items.get(i);
+                String txt = "  " + item.name() + "  x" + item.quantity();
                 final int idx = i;
                 RPGComponents.RPGButton b = makeSubBtn(txt, RPGTheme.HP_GREEN);
                 b.addActionListener(ev -> {
@@ -400,24 +388,23 @@ public class BattlePanel extends JPanel {
     }
 
     // ======================================================
-    // Stat refresh
+    // Stat refresh — all data via controller snapshots
     // ======================================================
     private void refreshPlayerStats() {
-        if (player == null) return;
-        playerNameLbl.setText(player.getCharacterName());
-        playerLevelLbl.setText("Lv. " + player.getLevel()
-            + "  [" + player.getRole().getDisplayName() + "]");
-        playerHpBar.setValues(player.getStats().getCurrentHP(),  player.getStats().getMaxHP());
-        playerMpBar.setValues(player.getStats().getCurrentMana(), player.getStats().getBaseMana());
+        BattleViewController.PlayerBattleSnapshot snap = viewController.getPlayerSnapshot();
+        if (snap == null) return;
+        playerNameLbl.setText(snap.name());
+        playerLevelLbl.setText("Lv. " + snap.level() + "  [" + snap.role() + "]");
+        playerHpBar.setValues(snap.currentHp(), snap.maxHp());
+        playerMpBar.setValues(snap.currentMana(), snap.maxMana());
     }
 
     private void refreshEnemyStats() {
-        if (enemy == null) return;
-        enemyNameLbl.setText(enemy.getCharacterName());
-        int cur = enemy.getStats().getCurrentHP();
-        int max = enemy.getStats().getMaxHP();
-        enemyHpLabel.setText("HP: " + cur + "/" + max);
-        enemyHpBar.setValues(cur, max);
+        BattleViewController.EnemyBattleSnapshot snap = viewController.getEnemySnapshot();
+        if (snap == null) return;
+        enemyNameLbl.setText(snap.name());
+        enemyHpLabel.setText("HP: " + snap.currentHp() + "/" + snap.maxHp());
+        enemyHpBar.setValues(snap.currentHp(), snap.maxHp());
     }
 
     // ======================================================

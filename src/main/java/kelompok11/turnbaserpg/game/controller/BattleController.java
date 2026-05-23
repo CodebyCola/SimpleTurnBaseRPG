@@ -73,25 +73,17 @@ public class BattleController {
         return true;
     }
 
-    /**
-     * Convenience overload for actions that don't need a secondary index.
-     */
+    // Convenience overload for actions that don't need a secondary index.
     public boolean handleAction(int action) {
         return handleAction(action, -1);
     }
 
-    // -------------------------------------------------------------------------
     // Battle State
-    // -------------------------------------------------------------------------
-
     public boolean isBattleOver()     { return result != null; }
     public BattleResult getResult()   { return result; }
     public BattleService getService() { return battleService; }
 
-    // -------------------------------------------------------------------------
     // Helpers
-    // -------------------------------------------------------------------------
-
     private void endBattle() {
         result = battleService.resolveBattle();
         dispatch(List.of(new BattleEvent(BattleEvent.Type.BATTLE_END,

@@ -34,39 +34,25 @@ public class DungeonController {
         void onBattleEvents(List<BattleEvent> events);
     }
 
-    /**
-     * The view implements this to supply player battle actions during a wave.
-     * The controller will call {@link #requestAction(BattleController)} each
-     * time an action is needed, and the view calls
-     * {@link BattleController#handleAction} before returning.
-     */
     @FunctionalInterface
     public interface BattleInputProvider {
 
         void requestAction(BattleController battle);
     }
 
-    /**
-     * The view implements this to ask whether the player wants to advance to
-     * the next floor. Call {@link DungeonController#advanceDecision(boolean)}
-     * with the answer.
-     */
+ 
     @FunctionalInterface
     public interface AdvancePrompt {
 
         void promptAdvance(int nextFloor);
     }
 
-    // -----------------------------------------------------------------------
     private final DungeonService dungeonService;
     private final DungeonEventListener dungeonListener;
     private final BattleEventListener battleListener;
     private final BattleInputProvider battleInput;
     private final AdvancePrompt advancePrompt;
 
-    /**
-     * Set true once the view responds to {@link AdvancePrompt}.
-     */
     private boolean waitingForAdvanceDecision = false;
     private boolean dungeonRunning = false;
 
@@ -84,14 +70,7 @@ public class DungeonController {
         this.advancePrompt = advancePrompt;
     }
 
-    // -----------------------------------------------------------------------
     // Dungeon Entry
-    // -----------------------------------------------------------------------
-    /**
-     * Begins the dungeon run. Starts the first floor immediately. If the view
-     * needs to prompt between floors, control returns temporarily; call
-     * {@link #advanceDecision(boolean)} to continue.
-     */
     public void enterDungeon() {
         dungeonService.initDungeon();
         dungeonRunning = true;
@@ -99,11 +78,6 @@ public class DungeonController {
         runNextFloor();
     }
 
-    /**
-     * Called by the view in response to {@link AdvancePrompt}.
-     *
-     * @param advance true = proceed to next floor; false = exit dungeon
-     */
     public void advanceDecision(boolean advance) {
         if (!waitingForAdvanceDecision) {
             return;
@@ -117,9 +91,7 @@ public class DungeonController {
         runNextFloor();
     }
 
-    // -----------------------------------------------------------------------
-    // Floor Loop (synchronous within a single call stack)
-    // -----------------------------------------------------------------------
+    // Floor Loop
     private void runNextFloor() {
         if (!dungeonService.hasMoreFloors()) {
             dungeonRunning = false;
@@ -186,9 +158,7 @@ public class DungeonController {
         return true;
     }
 
-    // -----------------------------------------------------------------------
     // Single Battle Delegation
-    // -----------------------------------------------------------------------
     private BattleResult runBattle(Enemy enemy) {
         Player player = dungeonService.getPlayer();
 
@@ -202,9 +172,7 @@ public class DungeonController {
         return battle.getResult();
     }
 
-    // -----------------------------------------------------------------------
     // Helpers
-    // -----------------------------------------------------------------------
     private void dispatchDungeon(List<DungeonEvent> events) {
         if (events != null && !events.isEmpty()) {
             dungeonListener.onDungeonEvents(events);

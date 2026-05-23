@@ -68,6 +68,7 @@ public class GameFrame extends JFrame {
                     Role role = Role.valueOf(roleStr.toUpperCase().trim());
                     Player player = gameController.register(name, password, role);
                     loginPanel.setStatus("", Color.WHITE);
+                    
                     showMainMenu(player);
                 } catch (IllegalArgumentException ex) {
                     loginPanel.setStatus("Pilih role yang valid.", RPGTheme.ACCENT_EMBER);

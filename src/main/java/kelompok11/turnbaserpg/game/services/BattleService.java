@@ -12,14 +12,7 @@ import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- * Pure battle logic service. Manages game state transitions for a single
- * player-vs-enemy encounter.
- *
- * All output is returned as {@link BattleEvent} lists — no I/O happens here.
- * Controllers are responsible for presenting events to the view and feeding
- * player actions back via the action methods.
- */
+
 public class BattleService {
 
     private final Player player;
@@ -51,12 +44,6 @@ public class BattleService {
         return events;
     }
 
-    // Turn Lifecycle (called by BattleController per turn)
-    /**
-     * Prepares the player's turn: regenerates mana, ticks buffs and cooldowns.
-     * Returns status events for the view. The controller then asks the player
-     * for an action and calls one of the action methods below.
-     */
     public List<BattleEvent> beginPlayerTurn() {
         gainMana();
         player.updateBuffs();
@@ -122,11 +109,6 @@ public class BattleService {
         return events;
     }
 
-    /**
-     * Player chooses to use a skill by 0-based index into the unlocked skill
-     * list. Returns null if the action was invalid (bad index, cooldown, no
-     * mana).
-     */
     public List<BattleEvent> actionUseSkill(int skillIndex) {
         var skills = player.getUnlockedSkills();
         List<BattleEvent> events = new ArrayList<>();
@@ -154,10 +136,6 @@ public class BattleService {
         return events;
     }
 
-    /**
-     * Player chooses to use an item by 0-based inventory index. Returns null if
-     * the action was invalid.
-     */
     public List<BattleEvent> actionUseItem(int inventoryIndex) {
         List<BattleEvent> events = new ArrayList<>();
 
@@ -203,13 +181,7 @@ public class BattleService {
         this.playerTurn = v;
     }
 
-    // -------------------------------------------------------------------------
     // Battle Resolution
-    // -------------------------------------------------------------------------
-    /**
-     * Applies win rewards and returns the final {@link BattleResult}. Call once
-     * {@link #isBattleOngoing()} returns false.
-     */
     public BattleResult resolveBattle() {
         BattleResult result = computeResult();
         if (result == BattleResult.WIN) {

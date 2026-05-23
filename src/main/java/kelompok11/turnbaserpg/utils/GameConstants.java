@@ -43,7 +43,7 @@ public class GameConstants {
         public static final int INITIAL_MAGIC = 30;
         public static final int INITIAL_MANA = 70;
         public static final int LEVEL_UP_MAGIC_BONUS = 5;
-        public static final int LEVEL_UP_MANA_BONUS = 15;
+        public static final int LEVEL_UP_MANA_BONUS = 10;
     }
 
 //    Archer Stats
