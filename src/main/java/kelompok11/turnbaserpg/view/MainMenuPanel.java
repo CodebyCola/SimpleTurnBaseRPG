@@ -267,24 +267,19 @@ public class MainMenuPanel extends JPanel {
         RPGComponents.RPGButton dungeonBtnLocal = makeMenuBtn(
                 "   Enter Dungeon", RPGTheme.ACCENT_GOLD);
         dungeonBtnLocal.addActionListener(e -> {
-            if (controller != null && controller.isPlayerDead()) {
-                JOptionPane.showMessageDialog(this,
-                        "You are dead! Use a potion from your Inventory to recover first.",
-                        "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            
-            // Add this block:
             if (controller != null) {
-                MainMenuController.PlayerSnapshot snap = controller.getPlayerSnapshot();
-                if ((controller.getPlayerLevel() - snap.highestClearedFloor()) > 1) {
-                    JOptionPane.showMessageDialog(this,
-                            "Your level exceeds the floor cap.",
-                            "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
-                    return;
+                MainMenuController.DungeonEntryResult result = controller.canEnterDungeon();
+                switch (result) {
+                    case PLAYER_DEAD -> {
+                        JOptionPane.showMessageDialog(this,
+                                "You are dead! Use a potion from your Inventory to recover first.",
+                                "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    case OK -> {
+                    } // fall through
                 }
             }
-
             if (onEnterDungeon != null) {
                 onEnterDungeon.run();
             }
@@ -694,16 +689,28 @@ public class MainMenuPanel extends JPanel {
         content.setBackground(RPGTheme.BG_DARK);
         content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
-        if (highest < 1) {
+        MainMenuController.DungeonEntryResult entryResult = controller.canEnterDungeon();
+        if (entryResult == MainMenuController.DungeonEntryResult.PLAYER_DEAD) {
+            // show dead message
             JLabel empty = RPGComponents.label(
-                    "Belum ada floor yang diselesaikan. Clear floor pertama dulu!",
+                    "Selisih level player dan level lantai melebihi 1!",
                     RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
             content.add(empty, BorderLayout.CENTER);
-        } else if ((controller.getPlayerLevel() - highest) > 1) {
+        } else if (entryResult == MainMenuController.DungeonEntryResult.OVER_LEVELED) {
+            // show over-level message  
             JLabel empty = RPGComponents.label(
                     "Selisih level player dan level lantai melebihi 1!",
+                    RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+            content.add(empty, BorderLayout.CENTER);
+        }
+
+        if (highest < 1) {
+            JLabel empty = RPGComponents.label(
+                    "Belum ada floor yang diselesaikan. Clear floor pertama dulu!",
                     RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
@@ -737,11 +744,22 @@ public class MainMenuPanel extends JPanel {
                     "Go to Floor", RPGTheme.ACCENT_GOLD, RPGTheme.BG_DARK);
             confirmBtn.setFont(RPGTheme.FONT_BODY_BOLD);
             confirmBtn.addActionListener(e -> {
-                if (controller.isPlayerDead()) {
-                    JOptionPane.showMessageDialog(dialog,
-                            "You are dead! Use a potion first.",
-                            "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
-                    return;
+                MainMenuController.DungeonEntryResult result = controller.canEnterDungeon();
+                switch (result) {
+                    case PLAYER_DEAD -> {
+                        JOptionPane.showMessageDialog(this,
+                                "You are dead! Use a potion from your Inventory to recover first.",
+                                "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    case OVER_LEVELED -> {
+                        JOptionPane.showMessageDialog(this,
+                                "Your level exceeds the floor cap.\nYou can only enter floors up to your current level.",
+                                "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    case OK -> {
+                    } // fall through
                 }
                 int chosen = (int) spinner.getValue();
                 boolean ok = controller.setReplayFloor(chosen);
