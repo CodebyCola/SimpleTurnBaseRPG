@@ -14,9 +14,6 @@ import kelompok11.turnbaserpg.view.GameFrame;
 public class Main {
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-
-            new GameFrame();
-        });
+        SwingUtilities.invokeLater(GameFrame::new);
     }
 }

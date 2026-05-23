@@ -1,0 +1,504 @@
+package kelompok11.turnbaserpg.view;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
+
+import kelompok11.turnbaserpg.model.character.InventorySlot;
+import kelompok11.turnbaserpg.model.character.Player;
+import kelompok11.turnbaserpg.model.skill.Skill;
+
+/**
+ * Main menu — kartu player, navigasi, dan dialog Inventory/Skills.
+ */
+public class MainMenuPanel extends JPanel {
+
+    // Player reference (diperbarui tiap login)
+    private Player currentPlayer;
+
+    // Callback
+    private final Runnable onEnterDungeon;
+    private final Runnable onLogout;
+
+    // Live labels
+    private JLabel nameLabel, levelLabel, roleLabel, goldLabel, floorLabel;
+    private RPGComponents.StatBar hpBar, manaBar, expBar;
+
+    public MainMenuPanel(Runnable onEnterDungeon, Runnable onLogout) {
+        this.onEnterDungeon = onEnterDungeon;
+        this.onLogout       = onLogout;
+        setLayout(new BorderLayout());
+        setBackground(RPGTheme.BG_DARKEST);
+        buildUI();
+    }
+
+    // ---- Update dari Player model ----
+    public void setPlayer(Player player) {
+        this.currentPlayer = player;
+        refreshUI();
+    }
+
+    // kept for backward compat dengan GameFrame lama
+    public void setPlayerData(String name, String role, int level,
+                              int hp, int maxHp, int mana, int maxMana,
+                              int exp, int maxExp, int gold, int floor) {
+        if (nameLabel  != null) nameLabel.setText(name);
+        if (levelLabel != null) levelLabel.setText("Level " + level);
+        if (roleLabel  != null) {
+            roleLabel.setText(RPGTheme.roleIcon(role) + "  " + role);
+            roleLabel.setForeground(RPGTheme.roleColor(role));
+        }
+        if (goldLabel  != null) goldLabel.setText("⚜  " + gold + " Gold");
+        if (floorLabel != null) floorLabel.setText("Floor " + floor + " / 100");
+        if (hpBar   != null) hpBar.setValues(hp, maxHp);
+        if (manaBar != null) manaBar.setValues(mana, maxMana);
+        if (expBar  != null) expBar.setValues(exp, maxExp);
+        repaint();
+    }
+
+    private void refreshUI() {
+        if (currentPlayer == null) return;
+        setPlayerData(
+            currentPlayer.getCharacterName(),
+            currentPlayer.getRole().name(),
+            currentPlayer.getLevel(),
+            currentPlayer.getStats().getCurrentHP(),
+            currentPlayer.getStats().getMaxHP(),
+            currentPlayer.getStats().getCurrentMana(),
+            currentPlayer.getStats().getBaseMana(),
+            currentPlayer.getCurrentExp(),
+            currentPlayer.getMaxExp(),
+            currentPlayer.getTotalGold(),
+            currentPlayer.getCurrentFloor()
+        );
+    }
+
+    // ======================================================
+    // Build UI
+    // ======================================================
+    private void buildUI() {
+        JPanel root = new JPanel(new BorderLayout(0, 0)) {
+            @Override protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                drawBg(g);
+            }
+        };
+        root.setBackground(RPGTheme.BG_DARKEST);
+        root.setOpaque(true);
+        add(root, BorderLayout.CENTER);
+
+        root.add(buildTopBar(),  BorderLayout.NORTH);
+
+        JPanel center = new JPanel(new GridBagLayout());
+        center.setOpaque(false);
+        center.setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1;
+
+        gbc.gridx = 0; gbc.weightx = 0.38;
+        gbc.insets = new Insets(0, 0, 0, 20);
+        center.add(buildPlayerCard(), gbc);
+
+        gbc.gridx = 1; gbc.weightx = 0.62;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        center.add(buildMenuPanel(), gbc);
+
+        root.add(center, BorderLayout.CENTER);
+        root.add(buildBottomBar(), BorderLayout.SOUTH);
+    }
+
+    private JPanel buildTopBar() {
+        JPanel bar = new JPanel(new BorderLayout()) {
+            @Override protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(RPGTheme.ACCENT_GOLD);
+                g.fillRect(0, getHeight() - 2, getWidth(), 2);
+            }
+        };
+        bar.setBackground(RPGTheme.BG_DARK);
+        bar.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
+
+        bar.add(RPGComponents.goldLabel("⚔  DUNGEON REALM", RPGTheme.FONT_HEADING),
+            BorderLayout.WEST);
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        right.setOpaque(false);
+
+        goldLabel = RPGComponents.goldLabel("⚜  0 Gold", RPGTheme.FONT_BODY_BOLD);
+        right.add(goldLabel);
+
+        RPGComponents.RPGButton logoutBtn = new RPGComponents.RPGButton(
+            "Logout", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARK);
+        logoutBtn.setPreferredSize(new Dimension(100, 32));
+        logoutBtn.addActionListener(e -> { if (onLogout != null) onLogout.run(); });
+        right.add(logoutBtn);
+        bar.add(right, BorderLayout.EAST);
+        return bar;
+    }
+
+    private JPanel buildPlayerCard() {
+        RPGComponents.DarkPanel card = new RPGComponents.DarkPanel(
+            RPGTheme.BG_DARK, RPGTheme.BORDER_GOLD, 10);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Avatar
+        JPanel avatar = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                String role = currentPlayer != null ? currentPlayer.getRole().name() : "WARRIOR";
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int s = Math.min(getWidth(), getHeight()) - 4;
+                int x = (getWidth() - s) / 2, y = (getHeight() - s) / 2;
+                Color rc = RPGTheme.roleColor(role);
+                g2.setColor(new Color(rc.getRed(), rc.getGreen(), rc.getBlue(), 50));
+                g2.fillOval(x-6, y-6, s+12, s+12);
+                g2.setColor(RPGTheme.BG_DARKEST);
+                g2.fillOval(x, y, s, s);
+                g2.setColor(rc);
+                g2.setStroke(new BasicStroke(2));
+                g2.drawOval(x, y, s, s);
+                g2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 36));
+                FontMetrics fm = g2.getFontMetrics();
+                String icon = RPGTheme.roleIcon(role);
+                g2.drawString(icon, x + (s - fm.stringWidth(icon))/2,
+                    y + (s + fm.getAscent() - fm.getDescent())/2);
+                g2.dispose();
+            }
+        };
+        avatar.setPreferredSize(new Dimension(90, 90));
+        avatar.setMaximumSize(new Dimension(90, 90));
+        avatar.setOpaque(false);
+        avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        nameLabel  = centeredLabel("Hero",       RPGTheme.TEXT_GOLD,    RPGTheme.FONT_HEADING);
+        roleLabel  = centeredLabel("⚔  WARRIOR", RPGTheme.WARRIOR_COLOR, RPGTheme.FONT_SUB);
+        levelLabel = centeredLabel("Level 1",    RPGTheme.ACCENT_SILVER, RPGTheme.FONT_BODY_BOLD);
+        floorLabel = centeredLabel("Floor 1/100",RPGTheme.TEXT_SECONDARY,RPGTheme.FONT_SMALL);
+
+        hpBar   = new RPGComponents.StatBar("HP",  100,100, RPGTheme.HP_RED);
+        manaBar = new RPGComponents.StatBar("MP",   30, 30, RPGTheme.MANA_BLUE);
+        expBar  = new RPGComponents.StatBar("EXP",   0,500, RPGTheme.EXP_PURPLE);
+        hpBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+        manaBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+        expBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+
+        card.add(avatar);
+        card.add(Box.createVerticalStrut(10));
+        card.add(nameLabel);
+        card.add(Box.createVerticalStrut(3));
+        card.add(roleLabel);
+        card.add(Box.createVerticalStrut(2));
+        card.add(levelLabel);
+        card.add(Box.createVerticalStrut(2));
+        card.add(floorLabel);
+        card.add(Box.createVerticalStrut(14));
+        card.add(makeSep());
+        card.add(Box.createVerticalStrut(12));
+        card.add(hpBar);
+        card.add(Box.createVerticalStrut(6));
+        card.add(manaBar);
+        card.add(Box.createVerticalStrut(6));
+        card.add(expBar);
+        card.add(Box.createVerticalGlue());
+        return card;
+    }
+
+    private JPanel buildMenuPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill    = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.gridx   = 0;
+        gbc.insets  = new Insets(7, 0, 7, 0);
+
+        JLabel title = RPGComponents.goldLabel("— MAIN MENU —", RPGTheme.FONT_HEADING);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 0; gbc.ipady = 0;
+        panel.add(title, gbc);
+
+        gbc.ipady = 12;
+
+        // Enter Dungeon
+        RPGComponents.RPGButton dungeonBtn = makeMenuBtn(
+            "⚔   Enter Dungeon", RPGTheme.ACCENT_GOLD);
+        dungeonBtn.addActionListener(e -> { if (onEnterDungeon != null) onEnterDungeon.run(); });
+        gbc.gridy = 1;
+        panel.add(dungeonBtn, gbc);
+
+        // Inventory
+        RPGComponents.RPGButton invBtn = makeMenuBtn(
+            "🎒   Inventory", RPGTheme.ACCENT_SILVER);
+        invBtn.addActionListener(e -> showInventoryDialog());
+        gbc.gridy = 2;
+        panel.add(invBtn, gbc);
+
+        // Skills
+        RPGComponents.RPGButton skillBtn = makeMenuBtn(
+            "✨   Skills", RPGTheme.EXP_PURPLE.brighter());
+        skillBtn.addActionListener(e -> showSkillsDialog());
+        gbc.gridy = 3;
+        panel.add(skillBtn, gbc);
+
+        gbc.gridy = 4; gbc.ipady = 0;
+        JLabel sep = RPGComponents.label("────  ⚜  ────", RPGTheme.TEXT_DISABLED, RPGTheme.FONT_SMALL);
+        sep.setHorizontalAlignment(SwingConstants.CENTER);
+        panel.add(sep, gbc);
+
+        // Logout
+        gbc.gridy = 5; gbc.ipady = 8;
+        RPGComponents.RPGButton logoutBtn = makeMenuBtn("⬅   Logout", RPGTheme.ACCENT_EMBER);
+        logoutBtn.addActionListener(e -> { if (onLogout != null) onLogout.run(); });
+        panel.add(logoutBtn, gbc);
+
+        gbc.gridy = 6; gbc.weighty = 1;
+        panel.add(Box.createVerticalGlue(), gbc);
+        return panel;
+    }
+
+    private RPGComponents.RPGButton makeMenuBtn(String text, Color color) {
+        RPGComponents.RPGButton btn = new RPGComponents.RPGButton(text, color, RPGTheme.BG_DARK);
+        btn.setPreferredSize(new Dimension(260, 52));
+        btn.setFont(RPGTheme.FONT_BODY_BOLD);
+        return btn;
+    }
+
+    private JPanel buildBottomBar() {
+        JPanel bar = new JPanel(new BorderLayout());
+        bar.setBackground(RPGTheme.BG_DARK);
+        bar.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(2, 0, 0, 0, RPGTheme.BORDER_DARK),
+            BorderFactory.createEmptyBorder(8, 24, 8, 24)
+        ));
+        bar.add(RPGComponents.label("Dungeon Realm v1.0  •  Kelompok 11",
+            RPGTheme.TEXT_DISABLED, RPGTheme.FONT_SMALL), BorderLayout.WEST);
+        return bar;
+    }
+
+    // ======================================================
+    // Inventory Dialog
+    // ======================================================
+    private void showInventoryDialog() {
+        JDialog dialog = makeDialog("📦  Inventory");
+
+        if (currentPlayer == null) {
+            dialog.add(RPGComponents.label("Tidak ada data player.", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_BODY));
+            dialog.pack();
+            dialog.setVisible(true);
+            return;
+        }
+
+        List<InventorySlot> slots = currentPlayer.getInventory().getSlots();
+
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setBackground(RPGTheme.BG_DARK);
+        content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        if (slots.isEmpty()) {
+            JLabel empty = RPGComponents.label(
+                "Inventory kosong. Kalahkan musuh untuk mendapatkan item!",
+                RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+            content.add(empty, BorderLayout.CENTER);
+        } else {
+            // Tabel inventory
+            String[] cols = {"Item", "Deskripsi", "Qty", "Harga"};
+            Object[][] data = new Object[slots.size()][4];
+            for (int i = 0; i < slots.size(); i++) {
+                InventorySlot slot = slots.get(i);
+                data[i][0] = slot.getItem().getName();
+                data[i][1] = slot.getItem().getDescription();
+                data[i][2] = slot.getQuantity();
+                data[i][3] = slot.getItem().getPrice() + " G";
+            }
+
+            JTable table = new JTable(data, cols) {
+                @Override public boolean isCellEditable(int r, int c) { return false; }
+            };
+            styleTable(table);
+
+            JScrollPane scroll = new JScrollPane(table);
+            scroll.setBorder(BorderFactory.createLineBorder(RPGTheme.BORDER_GOLD, 1));
+            scroll.getViewport().setBackground(RPGTheme.BG_DARKEST);
+            content.add(scroll, BorderLayout.CENTER);
+
+            // Summary
+            JLabel summary = RPGComponents.label(
+                "Total item: " + slots.size() + " jenis  |  Slot: " + slots.size() + "/30",
+                RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_SMALL);
+            content.add(summary, BorderLayout.SOUTH);
+        }
+
+        dialog.add(content);
+        dialog.setSize(560, 380);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    // ======================================================
+    // Skills Dialog
+    // ======================================================
+    private void showSkillsDialog() {
+        JDialog dialog = makeDialog("✨  Skill List");
+
+        if (currentPlayer == null) {
+            dialog.add(RPGComponents.label("Tidak ada data player.", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_BODY));
+            dialog.pack();
+            dialog.setVisible(true);
+            return;
+        }
+
+        List<Skill> skills = currentPlayer.getUnlockedSkills();
+
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setBackground(RPGTheme.BG_DARK);
+        content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        if (skills.isEmpty()) {
+            JLabel empty = RPGComponents.label(
+                "Belum ada skill. Selesaikan floor milestone untuk unlock skill!",
+                RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+            content.add(empty, BorderLayout.CENTER);
+        } else {
+            String[] cols = {"Skill", "Tipe", "Effect", "Mana", "Cooldown", "Deskripsi"};
+            Object[][] data = new Object[skills.size()][6];
+            for (int i = 0; i < skills.size(); i++) {
+                Skill sk = skills.get(i);
+                data[i][0] = sk.getName();
+                data[i][1] = sk.getClass().getSuperclass().getSimpleName(); // fallback
+                data[i][2] = "-";
+                data[i][3] = sk.getManaCost();
+                data[i][4] = sk.getCurrentCooldown() > 0
+                    ? "CD: " + sk.getCurrentCooldown()
+                    : "Ready";
+                data[i][5] = sk.getDescription();
+            }
+
+            JTable table = new JTable(data, cols) {
+                @Override public boolean isCellEditable(int r, int c) { return false; }
+                @Override public Component prepareRenderer(TableCellRenderer renderer, int row, int col) {
+                    Component c = super.prepareRenderer(renderer, row, col);
+                    if (c instanceof JLabel lbl) {
+                        String cdVal = (String) getValueAt(row, 4);
+                        if ("Ready".equals(cdVal)) {
+                            lbl.setForeground(col == 4 ? RPGTheme.HP_GREEN : RPGTheme.TEXT_PRIMARY);
+                        } else {
+                            lbl.setForeground(col == 4 ? RPGTheme.ACCENT_EMBER : RPGTheme.TEXT_PRIMARY);
+                        }
+                    }
+                    return c;
+                }
+            };
+            styleTable(table);
+            table.getColumnModel().getColumn(5).setPreferredWidth(200);
+
+            JScrollPane scroll = new JScrollPane(table);
+            scroll.setBorder(BorderFactory.createLineBorder(RPGTheme.BORDER_GOLD, 1));
+            scroll.getViewport().setBackground(RPGTheme.BG_DARKEST);
+            content.add(scroll, BorderLayout.CENTER);
+
+            JLabel summary = RPGComponents.label(
+                "Skill unlocked: " + skills.size() + " / 11  (skill baru tiap 10 floor)",
+                RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_SMALL);
+            content.add(summary, BorderLayout.SOUTH);
+        }
+
+        dialog.add(content);
+        dialog.setSize(680, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    // ======================================================
+    // Helpers
+    // ======================================================
+    private JDialog makeDialog(String title) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog d = new JDialog(owner instanceof Frame f ? f : null, title, true);
+        d.setLayout(new BorderLayout());
+        d.getContentPane().setBackground(RPGTheme.BG_DARK);
+
+        // Dark title-bar header
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(RPGTheme.BG_DARKEST);
+        header.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 2, 0, RPGTheme.BORDER_GOLD),
+            BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        ));
+        JLabel titleLbl = RPGComponents.goldLabel(title, RPGTheme.FONT_SUB);
+        header.add(titleLbl, BorderLayout.WEST);
+        RPGComponents.RPGButton closeBtn = new RPGComponents.RPGButton("✕", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARKEST);
+        closeBtn.setPreferredSize(new Dimension(34, 28));
+        closeBtn.addActionListener(e -> d.dispose());
+        header.add(closeBtn, BorderLayout.EAST);
+        d.add(header, BorderLayout.NORTH);
+
+        d.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        d.setResizable(true);
+        return d;
+    }
+
+    private void styleTable(JTable table) {
+        table.setBackground(RPGTheme.BG_DARKEST);
+        table.setForeground(RPGTheme.TEXT_PRIMARY);
+        table.setFont(RPGTheme.FONT_BODY);
+        table.setGridColor(RPGTheme.BORDER_DARK);
+        table.setRowHeight(28);
+        table.setShowGrid(true);
+        table.setSelectionBackground(RPGTheme.BG_LIGHT);
+        table.setSelectionForeground(RPGTheme.ACCENT_GOLD);
+        table.setFillsViewportHeight(true);
+
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(RPGTheme.BG_MID);
+        header.setForeground(RPGTheme.ACCENT_GOLD);
+        header.setFont(RPGTheme.FONT_BODY_BOLD);
+        header.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, RPGTheme.BORDER_GOLD));
+
+        // Center number columns
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        centerRenderer.setBackground(RPGTheme.BG_DARKEST);
+        centerRenderer.setForeground(RPGTheme.TEXT_PRIMARY);
+
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+    }
+
+    private JLabel centeredLabel(String text, Color color, Font font) {
+        JLabel l = new JLabel(text, SwingConstants.CENTER);
+        l.setForeground(color);
+        l.setFont(font);
+        l.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return l;
+    }
+
+    private JSeparator makeSep() {
+        JSeparator sep = new JSeparator();
+        sep.setForeground(RPGTheme.BORDER_GOLD);
+        sep.setBackground(RPGTheme.BORDER_DARK);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+        return sep;
+    }
+
+    private void drawBg(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        int w = getWidth(), h = getHeight();
+        g2.setColor(RPGTheme.BG_DARKEST);
+        g2.fillRect(0, 0, w, h);
+        g2.setColor(new Color(255, 255, 255, 4));
+        g2.setStroke(new BasicStroke(1));
+        for (int i = -h; i < w + h; i += 50) g2.drawLine(i, 0, i + h, h);
+        g2.dispose();
+    }
+}
