@@ -34,20 +34,15 @@ public class InventoryDAO {
         VALUES (?, ?, ?, ?)
     """;
 
-        try (Connection conn = Connector.connect()) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement deletePs = conn.prepareStatement(deleteQuery);
+             PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
 
             // hapus inventory lama
-            PreparedStatement deletePs
-                    = conn.prepareStatement(deleteQuery);
-
             deletePs.setInt(1, p.getId());
-
             deletePs.executeUpdate();
 
             // insert inventory terbaru
-            PreparedStatement insertPs
-                    = conn.prepareStatement(insertQuery);
-
             for (InventorySlot slot : p.getInventory().getSlots()) {
 
                 if (slot == null || slot.getItem() == null) {
@@ -85,46 +80,47 @@ public class InventoryDAO {
 
     public void read(Player p) {
         String query = "SELECT * FROM inventory WHERE player_id = ?";
-        try (Connection conn = Connector.connect()) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-            PreparedStatement ps = conn.prepareStatement(query);
             ps.setInt(1, p.getId());
-            ResultSet rs = ps.executeQuery();
 
-            Inventory inventory = new Inventory();
+            try (ResultSet rs = ps.executeQuery()) {
+                Inventory inventory = new Inventory();
 
-            while (rs.next()) {
+                while (rs.next()) {
 
-                String itemType = rs.getString("item_type");
-                String tierStr = rs.getString("tier");
-                int quantity = rs.getInt("quantity");
-                Item item = null;
+                    String itemType = rs.getString("item_type");
+                    String tierStr = rs.getString("tier");
+                    int quantity = rs.getInt("quantity");
+                    Item item = null;
 
-                PotionTier tier = null;
-                if (tierStr != null) {
-                    tier = PotionTier.valueOf(tierStr);
+                    PotionTier tier = null;
+                    if (tierStr != null) {
+                        tier = PotionTier.valueOf(tierStr);
+                    }
+
+                    switch (itemType) {
+
+                        case "HEALTH":
+                            item = new HealthPotion(tier);
+                            break;
+
+                        case "MANA":
+                            item = new ManaPotion(tier);
+                            break;
+                    }
+
+                    if (item != null) {
+
+                        InventorySlot slot
+                                = new InventorySlot(item, quantity);
+
+                        inventory.getSlots().add(slot);
+                    }
                 }
-
-                switch (itemType) {
-
-                    case "HEALTH":
-                        item = new HealthPotion(tier);
-                        break;
-
-                    case "MANA":
-                        item = new ManaPotion(tier);
-                        break;
-                }
-
-                if (item != null) {
-
-                    InventorySlot slot
-                            = new InventorySlot(item, quantity);
-
-                    inventory.getSlots().add(slot);
-                }
+                p.setInventory(inventory);
             }
-            p.setInventory(inventory);
             GameLogger.info("loading inventory success");
 
         } catch (SQLException e) {

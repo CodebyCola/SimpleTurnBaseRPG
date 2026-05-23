@@ -46,6 +46,7 @@ public class Player extends Character {
     }
 
     public Player() {
+        this.role = Role.WARRIOR; // default; overwritten by setRole() during login
         this.stats = new Stats();
         this.inventory = new Inventory();
         this.unlockedSkills = new ArrayList<>();
@@ -76,6 +77,13 @@ public class Player extends Character {
         }
     }
 
+    /**
+     * Used by DAO / persistence layer to restore the exact saved floor value.
+     * Bypasses the "only advance" guard so the loaded value is always applied.
+     */
+    public void loadCurrentFloor(int currentFloor) {
+        this.currentFloor = currentFloor;
+    }
     public int getTotalGold() { return totalGold; }
     public void setTotalGold(int totalGold) { this.totalGold = totalGold; }
     public Inventory getInventory() { return inventory; }

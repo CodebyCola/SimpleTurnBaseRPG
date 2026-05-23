@@ -174,7 +174,7 @@ public class Stats {
     }
 
 //    Battle System
-    public void takeDamage(int damage) {
+    public int takeDamage(int damage) {
         int finalDamage = damage * 100 / (100 + getTotalDefense());
 
         if (finalDamage < GameConstants.MIN_DAMAGE) {
@@ -187,6 +187,7 @@ public class Stats {
             currentHP = 0;
         }
 
+        return finalDamage;
     }
 
     public void heal(int amount) {

@@ -1,5 +1,6 @@
 package kelompok11.turnbaserpg.game.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import kelompok11.turnbaserpg.enums.BattleResult;
 import kelompok11.turnbaserpg.game.services.BattleEvent;
@@ -85,9 +86,23 @@ public class BattleController {
 
     // Helpers
     private void endBattle() {
+        int levelBefore = battleService.getPlayer().getLevel();
         result = battleService.resolveBattle();
-        dispatch(List.of(new BattleEvent(BattleEvent.Type.BATTLE_END,
-                "Battle ended: " + result)));
+
+        List<BattleEvent> endEvents = new ArrayList<>();
+        endEvents.add(new BattleEvent(BattleEvent.Type.BATTLE_END, "Battle ended: " + result));
+
+        if (result == BattleResult.WIN) {
+            int levelAfter = battleService.getPlayer().getLevel();
+            endEvents.add(new BattleEvent(BattleEvent.Type.ACTION_RESULT,
+                    "You gained EXP! (" + battleService.getPlayer().getCurrentExp()
+                    + "/" + battleService.getPlayer().getMaxExp() + ")"));
+            if (levelAfter > levelBefore) {
+                endEvents.add(new BattleEvent(BattleEvent.Type.ACTION_RESULT,
+                        "*** LEVEL UP! You are now level " + levelAfter + "! ***"));
+            }
+        }
+        dispatch(endEvents);
     }
 
     private void dispatch(List<BattleEvent> events) {
