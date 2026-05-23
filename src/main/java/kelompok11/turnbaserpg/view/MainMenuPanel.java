@@ -61,7 +61,9 @@ public class MainMenuPanel extends JPanel {
 
         // Show dead warning and dim dungeon button when HP = 0
         boolean dead = snap.isDead();
-        if (deadStatusLabel != null) deadStatusLabel.setVisible(dead);
+        if (deadStatusLabel != null) {
+            deadStatusLabel.setVisible(dead);
+        }
         if (dungeonBtn != null) {
             dungeonBtn.setEnabled(!dead);
             dungeonBtn.setForeground(dead ? RPGTheme.TEXT_DISABLED : RPGTheme.ACCENT_GOLD);
@@ -267,10 +269,22 @@ public class MainMenuPanel extends JPanel {
         dungeonBtnLocal.addActionListener(e -> {
             if (controller != null && controller.isPlayerDead()) {
                 JOptionPane.showMessageDialog(this,
-                    "You are dead! Use a potion from your Inventory to recover first.",
-                    "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                        "You are dead! Use a potion from your Inventory to recover first.",
+                        "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            
+            // Add this block:
+            if (controller != null) {
+                MainMenuController.PlayerSnapshot snap = controller.getPlayerSnapshot();
+                if ((controller.getPlayerLevel() - snap.highestClearedFloor()) > 1) {
+                    JOptionPane.showMessageDialog(this,
+                            "Your level exceeds the floor cap.",
+                            "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            }
+
             if (onEnterDungeon != null) {
                 onEnterDungeon.run();
             }
@@ -281,7 +295,7 @@ public class MainMenuPanel extends JPanel {
 
         // Dead-status warning label (hidden when alive)
         deadStatusLabel = RPGComponents.label(
-            "⚠  You are DEAD — use a potion to recover!", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
+                "⚠  You are DEAD — use a potion to recover!", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
         deadStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         deadStatusLabel.setVisible(false);
         gbc.gridy = 2;
@@ -524,7 +538,10 @@ public class MainMenuPanel extends JPanel {
                 }
 
                 JTable table = new JTable(data, cols) {
-                    @Override public boolean isCellEditable(int r, int c) { return false; }
+                    @Override
+                    public boolean isCellEditable(int r, int c) {
+                        return false;
+                    }
                 };
                 styleTable(table);
 
@@ -535,7 +552,8 @@ public class MainMenuPanel extends JPanel {
                     return btn;
                 });
                 table.addMouseListener(new java.awt.event.MouseAdapter() {
-                    @Override public void mouseClicked(java.awt.event.MouseEvent e) {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent e) {
                         int row = table.rowAtPoint(e.getPoint());
                         int col = table.columnAtPoint(e.getPoint());
                         if (col == 4 && row >= 0) {
@@ -679,6 +697,13 @@ public class MainMenuPanel extends JPanel {
         if (highest < 1) {
             JLabel empty = RPGComponents.label(
                     "Belum ada floor yang diselesaikan. Clear floor pertama dulu!",
+                    RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+            content.add(empty, BorderLayout.CENTER);
+        } else if ((controller.getPlayerLevel() - highest) > 1) {
+            JLabel empty = RPGComponents.label(
+                    "Selisih level player dan level lantai melebihi 1!",
                     RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));

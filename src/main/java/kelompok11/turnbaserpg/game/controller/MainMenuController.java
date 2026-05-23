@@ -157,4 +157,8 @@ public class MainMenuController {
     public boolean hasPlayer() {
         return player != null;
     }
+    
+    public int getPlayerLevel() {
+        return player.getLevel();
+    }
 }
