@@ -12,4 +12,5 @@ public enum ConsumableType {
     HEALTH,
     MANA,
     BUFF,
+    REVIVE
 }

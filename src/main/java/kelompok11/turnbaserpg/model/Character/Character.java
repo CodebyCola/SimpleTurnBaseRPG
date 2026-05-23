@@ -46,11 +46,6 @@ public abstract class Character {
         return stats.getCurrentHP() > 0;
     }
 
-    public int basicAttack(Character target) {
-        int totalAttack = stats.getTotalAttack();
-        return target.takeDamage(totalAttack);
-    }
-
     public int takeDamage(int damage) {
         return stats.takeDamage(damage);
     }
@@ -91,5 +86,7 @@ public abstract class Character {
             }
         }
     }
+    
+    public abstract int basicAttack(Character target);
 
 }

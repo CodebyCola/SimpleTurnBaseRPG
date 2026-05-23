@@ -4,11 +4,10 @@ import java.util.List;
 import kelompok11.turnbaserpg.model.character.InventorySlot;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.Skill;
+import kelompok11.turnbaserpg.utils.GameLogger;
 
-// Controller for MainMenuPanel — view asks controller, controller reads from model
 public class MainMenuController {
 
-    // DTO so the view never touches Player directly
     public record PlayerSnapshot(
         String name,
         String role,
@@ -17,7 +16,9 @@ public class MainMenuController {
         int currentMana, int maxMana,
         int currentExp, int maxExp,
         int gold,
-        int floor
+        int floor,
+        int highestClearedFloor,
+        boolean isDead
     ) {}
 
     private Player player;
@@ -30,7 +31,6 @@ public class MainMenuController {
         this.player = player;
     }
 
-    // Returns a snapshot of player stats for display
     public PlayerSnapshot getPlayerSnapshot() {
         if (player == null) return null;
         return new PlayerSnapshot(
@@ -44,11 +44,12 @@ public class MainMenuController {
             player.getCurrentExp(),
             player.getMaxExp(),
             player.getTotalGold(),
-            player.getCurrentFloor()
+            player.getCurrentFloor(),
+            player.getHighestClearedFloor(),
+            player.isDead()
         );
     }
 
-    // DTO for full character stats dialog
     public record StatsSnapshot(
         String name,
         String role,
@@ -60,10 +61,11 @@ public class MainMenuController {
         int currentMana, int baseMana,
         int currentExp, int maxExp,
         int gold,
-        int floor
+        int floor,
+        int highestClearedFloor,
+        boolean isDead
     ) {}
 
-    // Returns a full stats snapshot for the character stats dialog
     public StatsSnapshot getCharacterStats() {
         if (player == null) return null;
         return new StatsSnapshot(
@@ -83,20 +85,73 @@ public class MainMenuController {
             player.getCurrentExp(),
             player.getMaxExp(),
             player.getTotalGold(),
-            player.getCurrentFloor()
+            player.getCurrentFloor(),
+            player.getHighestClearedFloor(),
+            player.isDead()
         );
     }
 
-    // Returns inventory slots for display
     public List<InventorySlot> getInventorySlots() {
         if (player == null) return List.of();
         return player.getInventory().getSlots();
     }
 
-    // Returns unlocked skills for display
     public List<Skill> getUnlockedSkills() {
         if (player == null) return List.of();
         return player.getUnlockedSkills();
+    }
+
+    /** True if the player has HP <= 0 and cannot enter the dungeon. */
+    public boolean isPlayerDead() {
+        return player != null && player.isDead();
+    }
+
+    /**
+     * Use an item from inventory by slot index.
+     * Returns a result message for the UI to display.
+     */
+    public String useItem(int slotIndex) {
+        if (player == null) return "No player loaded.";
+        if (player.getInventory().isEmpty()) return "Inventory is empty.";
+        InventorySlot slot = player.getInventory().getSlot(slotIndex);
+        if (slot == null) return "Invalid item slot.";
+
+        String itemName = slot.getItem().getName();
+        int hpBefore = player.getStats().getCurrentHP();
+        int manaBefore = player.getStats().getCurrentMana();
+
+        player.getInventory().useItem(slotIndex, player);
+
+        int hpAfter = player.getStats().getCurrentHP();
+        int manaAfter = player.getStats().getCurrentMana();
+
+        String result = "Used " + itemName + ".";
+        if (hpAfter > hpBefore) result += " HP: +" + (hpAfter - hpBefore);
+        if (manaAfter > manaBefore) result += " Mana: +" + (manaAfter - manaBefore);
+
+        GameLogger.info("[ITEM USE] " + player.getCharacterName() + " used " + itemName
+                + " | HP: " + hpAfter + "/" + player.getStats().getMaxHP());
+        return result;
+    }
+
+    /**
+     * Returns true if the player is allowed to re-enter a previously cleared floor.
+     * A floor is re-enterable if it is <= highestClearedFloor.
+     */
+    public boolean canReplayFloor(int floor) {
+        return player != null && floor >= 1 && floor <= player.getHighestClearedFloor();
+    }
+
+    /**
+     * Sets the player's current floor to the given floor number so that
+     * DungeonService.initDungeon() picks it up correctly.
+     * Only allowed for floors already cleared.
+     */
+    public boolean setReplayFloor(int floor) {
+        if (!canReplayFloor(floor)) return false;
+        player.loadCurrentFloor(floor);
+        GameLogger.info(player.getCharacterName() + " replaying from floor " + floor);
+        return true;
     }
 
     public boolean hasPlayer() {

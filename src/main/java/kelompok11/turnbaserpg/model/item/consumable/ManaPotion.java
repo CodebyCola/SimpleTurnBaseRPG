@@ -6,7 +6,7 @@ package kelompok11.turnbaserpg.model.item.consumable;
 
 import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
-import kelompok11.turnbaserpg.model.character.Character;
+import kelompok11.turnbaserpg.model.character.Player;
 
 /**
  *
@@ -24,7 +24,7 @@ public class ManaPotion extends Potion {
                 ConsumableType.MANA);
     }
     
-    public void use(Character target) {
+    public void use(Player target) {
         target.getStats().increaseCurrentMana(this.effectValue);
     }
     

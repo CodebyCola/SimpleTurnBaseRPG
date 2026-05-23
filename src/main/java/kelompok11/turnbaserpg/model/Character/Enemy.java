@@ -24,6 +24,11 @@ public class Enemy extends Character {
         ));
     }
 
+    public int basicAttack(Character target) {
+        int totalAttack = stats.getTotalAttack();
+        return target.takeDamage(totalAttack);
+    }
+    
     /**
      * Used every 3rd enemy turn — deals scaled damage based on attack stat.
      */

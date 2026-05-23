@@ -6,26 +6,22 @@ package kelompok11.turnbaserpg.model.item.consumable;
 
 import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
+
 import kelompok11.turnbaserpg.model.character.Player;
 
 /**
  *
  * @author Pongo
  */
-public class HealthPotion extends Potion {
+public class RevivePotion extends Potion {
 
-    public HealthPotion(PotionTier tier) {
-        super(
-                tier.getDisplayName() + " Health Potion",
-                "Restore " + tier.getEffectValue() + " Hp to player",
-                tier.getEffectValue(),
-                (int) (50 * tier.getMultiplier()),
-                tier, ConsumableType.HEALTH);
+    public RevivePotion(PotionTier tier, ConsumableType type) {
+        super("Revive Potion", "Use this potion to revive your character", 1, 1000, tier, type);
     }
 
     @Override
     public void use(Player target) {
-        target.heal(this.effectValue);
+        target.revive();
     }
 
 }

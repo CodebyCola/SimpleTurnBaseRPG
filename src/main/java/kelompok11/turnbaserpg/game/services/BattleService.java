@@ -1,17 +1,19 @@
 package kelompok11.turnbaserpg.game.services;
 
+import static java.lang.Math.pow;
 import java.util.ArrayList;
 import java.util.List;
 import kelompok11.turnbaserpg.enums.BattleResult;
+import static kelompok11.turnbaserpg.enums.ConsumableType.REVIVE;
 import static kelompok11.turnbaserpg.enums.PotionTier.*;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.item.consumable.HealthPotion;
 import kelompok11.turnbaserpg.model.item.consumable.ManaPotion;
+import kelompok11.turnbaserpg.model.item.consumable.RevivePotion;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
-
 
 public class BattleService {
 
@@ -166,6 +168,17 @@ public class BattleService {
             return null;
         }
 
+        boolean isRevive = player.getInventory().getSlot(inventoryIndex).getItem().getName().equals("Revive Potion");
+
+        if (isRevive && !player.isDead()) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "Cannot revive when you still alive!"));
+            return null;
+        }
+        if (!isRevive && player.isDead()) {
+            events.add(new BattleEvent(BattleEvent.Type.ERROR, "Cannot use items while dead!"));
+            return null;
+        }
+
         String itemName = player.getInventory().getSlot(inventoryIndex).getItem().getName();
         player.getInventory().useItem(inventoryIndex, player);
         events.add(new BattleEvent(BattleEvent.Type.ITEM_USED,
@@ -191,10 +204,21 @@ public class BattleService {
         return enemy.isAlive() && player.isAlive() && !isEscaped;
     }
 
-    public boolean isPlayerTurn() { return playerTurn; }
-    public void setPlayerTurn(boolean v) { this.playerTurn = v; }
-    public Player getPlayer() { return player; }
-    public Enemy getEnemy() { return enemy; }
+    public boolean isPlayerTurn() {
+        return playerTurn;
+    }
+
+    public void setPlayerTurn(boolean v) {
+        this.playerTurn = v;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public Enemy getEnemy() {
+        return enemy;
+    }
 
     // Battle Resolution
     public BattleResult resolveBattle() {
@@ -240,14 +264,18 @@ public class BattleService {
 
         if (Math.random() < 0.3) {
             int gold = (int) (GameConstants.BASE_GOLD_REWARD
-                    * GameConstants.GOLD_SCALING_PER_LEVEL * player.getLevel());
+                    * (pow(GameConstants.GOLD_SCALING_PER_LEVEL, player.getLevel())));
             player.gainGold(gold);
             GameLogger.info("[GOLD REWARD] " + player.getCharacterName()
                     + " gained " + gold + " gold");
         }
 
         if (Math.random() < GameConstants.LOOT_DROP_RATE) {
-            if (Math.random() < 0.5) {
+            if (Math.random() < 0.01) {
+                player.getInventory().addItem(new RevivePotion(LARGE, REVIVE));
+                GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Revive Potion");
+
+            } else if (Math.random() < 0.5) {
                 player.getInventory().addItem(new HealthPotion(SMALL));
                 GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Health Potion");
             } else {

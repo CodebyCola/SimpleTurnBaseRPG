@@ -4,7 +4,7 @@
  */
 package kelompok11.turnbaserpg.model.item;
 
-import kelompok11.turnbaserpg.model.character.Character;
+import kelompok11.turnbaserpg.model.character.Player;
 
 /**
  *
@@ -12,5 +12,5 @@ import kelompok11.turnbaserpg.model.character.Character;
  */
 public interface Usable {
 
-    void use(Character target);
+    void use(Player target);
 }
