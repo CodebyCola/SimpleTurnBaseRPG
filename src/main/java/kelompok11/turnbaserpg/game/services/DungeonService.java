@@ -202,6 +202,10 @@ public class DungeonService {
      */
     public List<DungeonEvent> advanceFloor() {
         int cleared = player.getCurrentFloor();
+        // Track the highest floor the player has completed
+        if (cleared > player.getHighestClearedFloor()) {
+            player.setHighestClearedFloor(cleared);
+        }
         player.setCurrentFloor(cleared + 1);
 
         List<DungeonEvent> events = new ArrayList<>();

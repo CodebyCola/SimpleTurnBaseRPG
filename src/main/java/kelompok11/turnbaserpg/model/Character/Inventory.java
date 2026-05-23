@@ -76,7 +76,7 @@ public class Inventory {
         }
     }
 
-    public void useItem(int index, Character target) {
+    public void useItem(int index, Player target) {
 
         InventorySlot slot = getSlot(index);
 

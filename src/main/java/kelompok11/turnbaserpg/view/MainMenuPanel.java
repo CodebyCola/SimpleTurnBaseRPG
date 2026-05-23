@@ -25,6 +25,10 @@ public class MainMenuPanel extends JPanel {
     private JLabel nameLabel, levelLabel, roleLabel, goldLabel, floorLabel;
     private RPGComponents.StatBar hpBar, manaBar, expBar;
 
+    // Menu buttons that need refreshing
+    private RPGComponents.RPGButton dungeonBtn;
+    private JLabel deadStatusLabel;
+
     public MainMenuPanel(Runnable onEnterDungeon, Runnable onLogout) {
         this.onEnterDungeon = onEnterDungeon;
         this.onLogout = onLogout;
@@ -54,6 +58,14 @@ public class MainMenuPanel extends JPanel {
                 snap.currentExp(), snap.maxExp(),
                 snap.gold(), snap.floor()
         );
+
+        // Show dead warning and dim dungeon button when HP = 0
+        boolean dead = snap.isDead();
+        if (deadStatusLabel != null) deadStatusLabel.setVisible(dead);
+        if (dungeonBtn != null) {
+            dungeonBtn.setEnabled(!dead);
+            dungeonBtn.setForeground(dead ? RPGTheme.TEXT_DISABLED : RPGTheme.ACCENT_GOLD);
+        }
     }
 
     // kept for backward compat
@@ -250,41 +262,64 @@ public class MainMenuPanel extends JPanel {
 
         gbc.ipady = 12;
 
-        RPGComponents.RPGButton dungeonBtn = makeMenuBtn(
+        RPGComponents.RPGButton dungeonBtnLocal = makeMenuBtn(
                 "   Enter Dungeon", RPGTheme.ACCENT_GOLD);
-        dungeonBtn.addActionListener(e -> {
+        dungeonBtnLocal.addActionListener(e -> {
+            if (controller != null && controller.isPlayerDead()) {
+                JOptionPane.showMessageDialog(this,
+                    "You are dead! Use a potion from your Inventory to recover first.",
+                    "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             if (onEnterDungeon != null) {
                 onEnterDungeon.run();
             }
         });
+        this.dungeonBtn = dungeonBtnLocal;
         gbc.gridy = 1;
-        panel.add(dungeonBtn, gbc);
+        panel.add(dungeonBtnLocal, gbc);
+
+        // Dead-status warning label (hidden when alive)
+        deadStatusLabel = RPGComponents.label(
+            "⚠  You are DEAD — use a potion to recover!", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
+        deadStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        deadStatusLabel.setVisible(false);
+        gbc.gridy = 2;
+        gbc.ipady = 0;
+        panel.add(deadStatusLabel, gbc);
+        gbc.ipady = 12;
+
+        RPGComponents.RPGButton replayBtn = makeMenuBtn(
+                "   Replay Floor", RPGTheme.ACCENT_SILVER);
+        replayBtn.addActionListener(e -> showReplayFloorDialog());
+        gbc.gridy = 3;
+        panel.add(replayBtn, gbc);
 
         RPGComponents.RPGButton invBtn = makeMenuBtn(
                 "   Inventory", RPGTheme.ACCENT_SILVER);
         invBtn.addActionListener(e -> showInventoryDialog());
-        gbc.gridy = 2;
+        gbc.gridy = 4;
         panel.add(invBtn, gbc);
 
         RPGComponents.RPGButton skillBtn = makeMenuBtn(
                 "   Skills", RPGTheme.EXP_PURPLE.brighter());
         skillBtn.addActionListener(e -> showSkillsDialog());
-        gbc.gridy = 3;
+        gbc.gridy = 5;
         panel.add(skillBtn, gbc);
 
         RPGComponents.RPGButton statsBtn = makeMenuBtn(
                 "   Character Stats", RPGTheme.MANA_BLUE.brighter());
         statsBtn.addActionListener(e -> showCharacterStatsDialog());
-        gbc.gridy = 4;
+        gbc.gridy = 6;
         panel.add(statsBtn, gbc);
 
-        gbc.gridy = 5;
+        gbc.gridy = 7;
         gbc.ipady = 0;
         JLabel sep = RPGComponents.label("────  x  ────", RPGTheme.TEXT_DISABLED, RPGTheme.FONT_SMALL);
         sep.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(sep, gbc);
 
-        gbc.gridy = 6;
+        gbc.gridy = 8;
         gbc.ipady = 8;
         RPGComponents.RPGButton logoutBtn = makeMenuBtn("←   Logout", RPGTheme.ACCENT_EMBER);
         logoutBtn.addActionListener(e -> {
@@ -294,7 +329,7 @@ public class MainMenuPanel extends JPanel {
         });
         panel.add(logoutBtn, gbc);
 
-        gbc.gridy = 7;
+        gbc.gridy = 9;
         gbc.weighty = 1;
         panel.add(Box.createVerticalGlue(), gbc);
         return panel;
@@ -385,8 +420,18 @@ public class MainMenuPanel extends JPanel {
         grid.add(statValue(s.gold() + " G", RPGTheme.ACCENT_GOLD));
 
         // Floor
-        grid.add(statLabel("🗺  Highest Floor"));
-        grid.add(statValue(s.floor() + " / 100", RPGTheme.TEXT_PRIMARY));
+        grid.add(statLabel("🗺  Current Floor"));
+        grid.add(statValue(String.valueOf(s.floor()), RPGTheme.TEXT_PRIMARY));
+
+        // Highest cleared floor
+        grid.add(statLabel("🏆  Highest Cleared"));
+        grid.add(statValue(s.highestClearedFloor() + " / 100", RPGTheme.ACCENT_GOLD));
+
+        // Dead status
+        if (s.isDead()) {
+            grid.add(statLabel("💀  Status"));
+            grid.add(statValue("DEAD — use a potion!", RPGTheme.ACCENT_EMBER));
+        }
 
         // Wrap grid in a card panel
         RPGComponents.DarkPanel gridCard = new RPGComponents.DarkPanel(
@@ -443,52 +488,85 @@ public class MainMenuPanel extends JPanel {
             return;
         }
 
-        // Controller provides inventory data — no direct model access here
-        List<InventorySlot> slots = controller.getInventorySlots();
+        // Use a wrapper so we can rebuild the content on item use
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(RPGTheme.BG_DARK);
+        dialog.add(wrapper);
 
-        JPanel content = new JPanel(new BorderLayout(0, 12));
-        content.setBackground(RPGTheme.BG_DARK);
-        content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        // Build a refreshable content builder
+        Runnable[] refreshRef = new Runnable[1];
+        refreshRef[0] = () -> {
+            wrapper.removeAll();
+            List<InventorySlot> slots = controller.getInventorySlots();
 
-        if (slots.isEmpty()) {
-            JLabel empty = RPGComponents.label(
-                    "Inventory kosong. Kalahkan musuh untuk mendapatkan item!",
-                    RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
-            empty.setHorizontalAlignment(SwingConstants.CENTER);
-            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
-            content.add(empty, BorderLayout.CENTER);
-        } else {
-            String[] cols = {"Item", "Deskripsi", "Qty", "Harga"};
-            Object[][] data = new Object[slots.size()][4];
-            for (int i = 0; i < slots.size(); i++) {
-                InventorySlot slot = slots.get(i);
-                data[i][0] = slot.getItem().getName();
-                data[i][1] = slot.getItem().getDescription();
-                data[i][2] = slot.getQuantity();
-                data[i][3] = slot.getItem().getPrice() + " G";
+            JPanel content = new JPanel(new BorderLayout(0, 12));
+            content.setBackground(RPGTheme.BG_DARK);
+            content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+            if (slots.isEmpty()) {
+                JLabel empty = RPGComponents.label(
+                        "Inventory kosong. Kalahkan musuh untuk mendapatkan item!",
+                        RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+                empty.setHorizontalAlignment(SwingConstants.CENTER);
+                empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+                content.add(empty, BorderLayout.CENTER);
+            } else {
+                // Table + Use button column
+                String[] cols = {"Item", "Deskripsi", "Qty", "Harga", "Aksi"};
+                Object[][] data = new Object[slots.size()][5];
+                for (int i = 0; i < slots.size(); i++) {
+                    InventorySlot slot = slots.get(i);
+                    data[i][0] = slot.getItem().getName();
+                    data[i][1] = slot.getItem().getDescription();
+                    data[i][2] = slot.getQuantity();
+                    data[i][3] = slot.getItem().getPrice() + " G";
+                    data[i][4] = "Use";
+                }
+
+                JTable table = new JTable(data, cols) {
+                    @Override public boolean isCellEditable(int r, int c) { return false; }
+                };
+                styleTable(table);
+
+                // Button renderer + click handler for "Use" column
+                table.getColumn("Aksi").setCellRenderer((tbl, value, isSelected, hasFocus, row, col) -> {
+                    RPGComponents.RPGButton btn = new RPGComponents.RPGButton("Use", RPGTheme.HP_GREEN, RPGTheme.BG_DARKEST);
+                    btn.setFont(RPGTheme.FONT_SMALL);
+                    return btn;
+                });
+                table.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override public void mouseClicked(java.awt.event.MouseEvent e) {
+                        int row = table.rowAtPoint(e.getPoint());
+                        int col = table.columnAtPoint(e.getPoint());
+                        if (col == 4 && row >= 0) {
+                            String msg = controller.useItem(row);
+                            JOptionPane.showMessageDialog(dialog, msg, "Item Used", JOptionPane.INFORMATION_MESSAGE);
+                            refreshRef[0].run(); // rebuild table after use
+                            refreshUI();          // refresh HP bar in main menu
+                        }
+                    }
+                });
+                table.getColumnModel().getColumn(4).setPreferredWidth(55);
+                table.setRowHeight(28);
+
+                JScrollPane scroll = new JScrollPane(table);
+                scroll.setBorder(BorderFactory.createLineBorder(RPGTheme.BORDER_GOLD, 1));
+                scroll.getViewport().setBackground(RPGTheme.BG_DARKEST);
+                content.add(scroll, BorderLayout.CENTER);
+
+                JLabel summary = RPGComponents.label(
+                        "Total item: " + slots.size() + " jenis  |  Slot: " + slots.size() + "/30",
+                        RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_SMALL);
+                content.add(summary, BorderLayout.SOUTH);
             }
 
-            JTable table = new JTable(data, cols) {
-                @Override
-                public boolean isCellEditable(int r, int c) {
-                    return false;
-                }
-            };
-            styleTable(table);
+            wrapper.add(content);
+            wrapper.revalidate();
+            wrapper.repaint();
+        };
+        refreshRef[0].run();
 
-            JScrollPane scroll = new JScrollPane(table);
-            scroll.setBorder(BorderFactory.createLineBorder(RPGTheme.BORDER_GOLD, 1));
-            scroll.getViewport().setBackground(RPGTheme.BG_DARKEST);
-            content.add(scroll, BorderLayout.CENTER);
-
-            JLabel summary = RPGComponents.label(
-                    "Total item: " + slots.size() + " jenis  |  Slot: " + slots.size() + "/30",
-                    RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_SMALL);
-            content.add(summary, BorderLayout.SOUTH);
-        }
-
-        dialog.add(content);
-        dialog.setSize(560, 380);
+        dialog.setSize(600, 400);
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
     }
@@ -578,6 +656,94 @@ public class MainMenuPanel extends JPanel {
     // ======================================================
     // Helpers
     // ======================================================
+    // ======================================================
+    // Replay Floor Dialog
+    // ======================================================
+    private void showReplayFloorDialog() {
+        JDialog dialog = makeDialog("  Replay Floor");
+
+        if (controller == null || !controller.hasPlayer()) {
+            dialog.add(RPGComponents.label("Tidak ada data player.", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_BODY));
+            dialog.pack();
+            dialog.setVisible(true);
+            return;
+        }
+
+        MainMenuController.PlayerSnapshot snap = controller.getPlayerSnapshot();
+        int highest = snap.highestClearedFloor();
+
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setBackground(RPGTheme.BG_DARK);
+        content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+        if (highest < 1) {
+            JLabel empty = RPGComponents.label(
+                    "Belum ada floor yang diselesaikan. Clear floor pertama dulu!",
+                    RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY);
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            empty.setBorder(BorderFactory.createEmptyBorder(40, 20, 40, 20));
+            content.add(empty, BorderLayout.CENTER);
+        } else {
+            // Info label
+            JLabel info = RPGComponents.label(
+                    "Pilih floor yang ingin kamu ulangi (1 – " + highest + "):",
+                    RPGTheme.TEXT_PRIMARY, RPGTheme.FONT_BODY);
+            content.add(info, BorderLayout.NORTH);
+
+            // Spinner for floor selection
+            SpinnerNumberModel spinModel = new SpinnerNumberModel(1, 1, highest, 1);
+            JSpinner spinner = new JSpinner(spinModel);
+            spinner.setFont(RPGTheme.FONT_BODY);
+            spinner.setBackground(RPGTheme.BG_DARKEST);
+            spinner.setForeground(RPGTheme.TEXT_PRIMARY);
+            ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField()
+                    .setBackground(RPGTheme.BG_DARKEST);
+            ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField()
+                    .setForeground(RPGTheme.TEXT_PRIMARY);
+
+            JPanel spinPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+            spinPanel.setBackground(RPGTheme.BG_DARK);
+            spinPanel.add(RPGComponents.label("Floor: ", RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_BODY));
+            spinPanel.add(spinner);
+            content.add(spinPanel, BorderLayout.CENTER);
+
+            // Confirm button
+            RPGComponents.RPGButton confirmBtn = new RPGComponents.RPGButton(
+                    "Go to Floor", RPGTheme.ACCENT_GOLD, RPGTheme.BG_DARK);
+            confirmBtn.setFont(RPGTheme.FONT_BODY_BOLD);
+            confirmBtn.addActionListener(e -> {
+                if (controller.isPlayerDead()) {
+                    JOptionPane.showMessageDialog(dialog,
+                            "You are dead! Use a potion first.",
+                            "Cannot Enter Dungeon", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                int chosen = (int) spinner.getValue();
+                boolean ok = controller.setReplayFloor(chosen);
+                if (ok) {
+                    dialog.dispose();
+                    if (onEnterDungeon != null) {
+                        onEnterDungeon.run();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(dialog,
+                            "Floor " + chosen + " belum diselesaikan.",
+                            "Invalid Floor", JOptionPane.WARNING_MESSAGE);
+                }
+            });
+
+            JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            btnPanel.setBackground(RPGTheme.BG_DARK);
+            btnPanel.add(confirmBtn);
+            content.add(btnPanel, BorderLayout.SOUTH);
+        }
+
+        dialog.add(content);
+        dialog.setSize(420, 260);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
     private JDialog makeDialog(String title) {
         Window owner = SwingUtilities.getWindowAncestor(this);
         JDialog d = new JDialog(owner instanceof Frame f ? f : null, title, true);

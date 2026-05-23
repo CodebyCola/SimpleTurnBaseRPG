@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import kelompok11.turnbaserpg.database.Connector;
+import kelompok11.turnbaserpg.enums.ConsumableType;
 import kelompok11.turnbaserpg.enums.PotionTier;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.item.consumable.*;
@@ -108,6 +109,10 @@ public class InventoryDAO {
 
                         case "MANA":
                             item = new ManaPotion(tier);
+                            break;
+                            
+                        case "REVIVE":
+                            item = new RevivePotion(tier, ConsumableType.valueOf(itemType));
                             break;
                     }
 

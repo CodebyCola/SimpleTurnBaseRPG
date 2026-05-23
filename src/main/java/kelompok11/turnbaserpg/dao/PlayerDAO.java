@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.dao;
 
 import java.sql.Connection;
@@ -15,19 +11,16 @@ import kelompok11.turnbaserpg.model.character.Stats;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- *
- * @author Pongo
- */
 public class PlayerDAO {
 
     public void insert(Player player) {
         String query = "INSERT INTO players "
-                + "(name, password, role, level, exp, gold, floor, "
+                + "(name, password, role, level, exp, gold, floor, highest_cleared_floor, "
                 + "current_hp, current_mp, stat_hp, stat_atk, stat_def, stat_magic, stat_mana) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, player.getCharacterName());
             ps.setString(2, player.getPassword());
@@ -36,13 +29,14 @@ public class PlayerDAO {
             ps.setInt(5, player.getCurrentExp());
             ps.setInt(6, player.getTotalGold());
             ps.setInt(7, player.getCurrentFloor());
-            ps.setInt(8, player.getStats().getCurrentHP());
-            ps.setInt(9, player.getStats().getCurrentMana());
-            ps.setInt(10, player.getStats().getMaxHP());
-            ps.setInt(11, player.getStats().getBaseAttack());
-            ps.setInt(12, player.getStats().getBaseDefense());
-            ps.setInt(13, player.getStats().getBaseMagic());
-            ps.setInt(14, player.getStats().getBaseMana());
+            ps.setInt(8, player.getHighestClearedFloor());
+            ps.setInt(9, player.getStats().getCurrentHP());
+            ps.setInt(10, player.getStats().getCurrentMana());
+            ps.setInt(11, player.getStats().getMaxHP());
+            ps.setInt(12, player.getStats().getBaseAttack());
+            ps.setInt(13, player.getStats().getBaseDefense());
+            ps.setInt(14, player.getStats().getBaseMagic());
+            ps.setInt(15, player.getStats().getBaseMana());
 
             ps.executeUpdate();
 
@@ -59,25 +53,27 @@ public class PlayerDAO {
 
     public void update(Player player) {
         String query = "UPDATE players SET "
-                + "level = ?, exp = ?, gold = ?, floor = ?, "
+                + "level = ?, exp = ?, gold = ?, floor = ?, highest_cleared_floor = ?, "
                 + "current_hp = ?, current_mp = ?, "
                 + "stat_hp = ?, stat_atk = ?, stat_def = ?, stat_magic = ?, stat_mana = ? "
                 + "WHERE id = ?";
 
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setInt(1, player.getLevel());
             ps.setInt(2, player.getCurrentExp());
             ps.setInt(3, player.getTotalGold());
             ps.setInt(4, player.getCurrentFloor());
-            ps.setInt(5, player.getStats().getCurrentHP());
-            ps.setInt(6, player.getStats().getCurrentMana());
-            ps.setInt(7, player.getStats().getMaxHP());
-            ps.setInt(8, player.getStats().getBaseAttack());
-            ps.setInt(9, player.getStats().getBaseDefense());
-            ps.setInt(10, player.getStats().getBaseMagic());
-            ps.setInt(11, player.getStats().getBaseMana());
-            ps.setInt(12, player.getId());
+            ps.setInt(5, player.getHighestClearedFloor());
+            ps.setInt(6, player.getStats().getCurrentHP());
+            ps.setInt(7, player.getStats().getCurrentMana());
+            ps.setInt(8, player.getStats().getMaxHP());
+            ps.setInt(9, player.getStats().getBaseAttack());
+            ps.setInt(10, player.getStats().getBaseDefense());
+            ps.setInt(11, player.getStats().getBaseMagic());
+            ps.setInt(12, player.getStats().getBaseMana());
+            ps.setInt(13, player.getId());
 
             ps.executeUpdate();
             GameLogger.info("Player updated: " + player.getCharacterName());
@@ -88,7 +84,8 @@ public class PlayerDAO {
 
     public void delete(int id) {
         String query = "DELETE FROM players WHERE id = ?";
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, id);
             ps.executeUpdate();
             GameLogger.info("Player deleted: id=" + id);
@@ -100,7 +97,8 @@ public class PlayerDAO {
     public Player login(String name, String password) {
         String query = "SELECT * FROM players WHERE name = ? AND password = ?";
 
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, name);
             ps.setString(2, password);
@@ -128,7 +126,15 @@ public class PlayerDAO {
                     player.setCurrentExp(rs.getInt("exp"));
                     player.setMaxExp((int) (GameConstants.INITIAL_EXP_REQUIRED * Math.pow(1.2, rs.getInt("level") - 1)));
                     player.setTotalGold(rs.getInt("gold"));
-                    player.setCurrentFloor(rs.getInt("floor"));
+                    player.loadCurrentFloor(rs.getInt("floor"));
+
+                    // Load highest_cleared_floor (column may not exist on old DBs — default 0)
+                    try {
+                        player.setHighestClearedFloor(rs.getInt("highest_cleared_floor"));
+                    } catch (SQLException ignored) {
+                        player.setHighestClearedFloor(0);
+                    }
+
                     player.setStats(stats);
 
                     GameLogger.info("Login successful: " + name);
@@ -145,7 +151,8 @@ public class PlayerDAO {
     public boolean cekUserName(String name) {
         String query = "SELECT 1 FROM players WHERE name = ? LIMIT 1";
 
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, name);
 
@@ -157,5 +164,4 @@ public class PlayerDAO {
             return false;
         }
     }
-
 }

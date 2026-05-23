@@ -23,29 +23,37 @@ public class SkillsDAO {
         String deleteQuery = "DELETE FROM player_skills WHERE player_id = ?";
         String insertQuery = "INSERT INTO player_skills (player_id, skill_name) VALUES (?, ?)";
 
-        try (Connection conn = Connector.connect();
-             PreparedStatement deletePs = conn.prepareStatement(deleteQuery);
-             PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
+        try (Connection conn = Connector.connect()) {
+            conn.setAutoCommit(false);
 
-            deletePs.setInt(1, player.getId());
-            deletePs.executeUpdate();
+            try (PreparedStatement deletePs = conn.prepareStatement(deleteQuery); PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
 
-            for (var skill : player.getUnlockedSkills()) {
-                insertPs.setInt(1, player.getId());
-                insertPs.setString(2, skill.getName());
-                insertPs.addBatch();
+                deletePs.setInt(1, player.getId());
+                deletePs.executeUpdate();
+
+                for (var skill : player.getUnlockedSkills()) {
+                    insertPs.setInt(1, player.getId());
+                    insertPs.setString(2, skill.getName());
+                    insertPs.addBatch();
+                }
+                insertPs.executeBatch();
+
+                conn.commit();
+                GameLogger.info("Skills saved for player " + player.getCharacterName());
+
+            } catch (SQLException e) {
+                conn.rollback(); // DELETE is undone if INSERT fails
+                GameLogger.error("Failed to save skills: " + e.getMessage());
             }
-            insertPs.executeBatch();
-            GameLogger.info("Skills saved for player " + player.getCharacterName());
+
         } catch (SQLException e) {
-            GameLogger.error("Failed to save skills: " + e.getMessage());
+            GameLogger.error("Failed to open connection: " + e.getMessage());
         }
     }
 
     public void read(Player player) {
         String query = "SELECT skill_name FROM player_skills WHERE player_id = ?";
-        try (Connection conn = Connector.connect();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setInt(1, player.getId());
 
