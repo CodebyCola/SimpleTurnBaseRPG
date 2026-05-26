@@ -4,7 +4,7 @@
  */
 package kelompok11.turnbaserpg.model.character;
 
-import kelompok11.turnbaserpg.model.character.Character;
+import kelompok11.turnbaserpg.model.item.equipment.*;
 import java.util.ArrayList;
 import kelompok11.turnbaserpg.enums.*;
 import kelompok11.turnbaserpg.model.skill.BasicHeal;
@@ -29,6 +29,11 @@ public class Player extends Character {
     private String password;
     private Inventory inventory;
     private ArrayList<Skill> unlockedSkills;
+    private Equipment head;
+    private Equipment chest;
+    private Equipment legs;
+    private Equipment shoes;
+    private Equipment weapon;
 
     public Player(String characterName, Role role) {
         super(characterName, createStatsByRole(role));
@@ -190,6 +195,7 @@ public class Player extends Character {
         return unlockedSkills.size();
     }
 
+//    Game System
     private static Stats createStatsByRole(Role role) {
         switch (role) {
             case WARRIOR:
@@ -270,6 +276,127 @@ public class Player extends Character {
         }
     }
 
+    private void applyEquipmentBonus(Equipment equipment) {
+
+        switch (equipment.getEquipmentStat()) {
+
+            case ATTACK ->
+                stats.increaseAttackBonus(
+                        equipment.getEffectValue()
+                );
+
+            case DEFENSE ->
+                stats.increaseDefenseBonus(
+                        equipment.getEffectValue()
+                );
+
+            case MAGIC ->
+                stats.increaseMagicBonus(
+                        equipment.getEffectValue()
+                );
+
+            case MANA ->
+                stats.increaseManaBonus(
+                        equipment.getEffectValue()
+                );
+        }
+    }
+
+    private void removeEquipmentBonus(Equipment equipment) {
+
+        switch (equipment.getEquipmentStat()) {
+
+            case ATTACK ->
+                stats.decreaseAttackBonus(
+                        equipment.getEffectValue()
+                );
+
+            case DEFENSE ->
+                stats.decreaseDefenseBonus(
+                        equipment.getEffectValue()
+                );
+
+            case MAGIC ->
+                stats.decreaseMagicBonus(
+                        equipment.getEffectValue()
+                );
+
+            case MANA ->
+                stats.decreaseManaBonus(
+                        equipment.getEffectValue()
+                );
+        }
+    }
+
+    public void equip(Equipment equipment) {
+        switch (equipment.getEquipmentType()) {
+
+            case HEAD -> {
+                if (head != null) {
+                    unequip(head);
+                }
+
+                head = equipment;
+            }
+            case CHEST -> {
+                if (chest != null) {
+                    unequip(chest);
+                }
+
+                chest = equipment;
+            }
+            case LEGS -> {
+                if (legs != null) {
+                    unequip(legs);
+                }
+
+                legs = equipment;
+            }
+            case SHOES -> {
+                if (shoes != null) {
+                    unequip(shoes);
+                }
+
+                shoes = equipment;
+            }
+            case WEAPON -> {
+                if (weapon != null) {
+                    unequip(weapon);
+                }
+
+                weapon = equipment;
+            }
+        }
+        applyEquipmentBonus(equipment);
+
+        GameLogger.info(
+                characterName + " equipped " + equipment.getName()
+        );
+    }
+
+    public void unequip(Equipment equipment) {
+
+        removeEquipmentBonus(equipment);
+        switch (equipment.getEquipmentType()) {
+
+            case HEAD ->
+                head = null;
+            case CHEST ->
+                chest = null;
+            case LEGS ->
+                legs = null;
+            case SHOES ->
+                shoes = null;
+            case WEAPON ->
+                weapon = null;
+        }
+
+        GameLogger.info(
+                characterName + " unequipped " + equipment.getName()
+        );
+    }
+
+    // Combat
     public void setDefend(boolean set) {
         if (set) {
             stats.increaseDefenseBonus(GameConstants.DEFEND_BONUS);
@@ -278,6 +405,7 @@ public class Player extends Character {
         }
     }
 
+//    Basic attack berdasarkan role
     public int basicAttack(Character target) {
 
         switch (role) {
