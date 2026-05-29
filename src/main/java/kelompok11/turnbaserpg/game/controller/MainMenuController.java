@@ -162,24 +162,32 @@ public class MainMenuController {
         return result;
     }
 
-    /**
-     * Returns true if the player is allowed to re-enter a previously cleared
-     * floor. A floor is re-enterable if it is <= highestClearedFloor.
-     */
     public boolean canReplayFloor(int floor) {
         return player != null && floor >= 1 && floor <= player.getHighestClearedFloor();
     }
 
-    /**
-     * Sets the player's current floor to the given floor number so that
-     * DungeonService.initDungeon() picks it up correctly. Only allowed for
-     * floors already cleared.
-     */
+    public DungeonEntryResult canEnterReplay(int chosenFloor) {
+        if (player == null) {
+            return DungeonEntryResult.PLAYER_DEAD;
+        }
+        if (player.isDead()) {
+            return DungeonEntryResult.PLAYER_DEAD;
+        }
+        if ((player.getLevel() - chosenFloor) > 0) {
+            return DungeonEntryResult.OVER_LEVELED;
+        }
+        return DungeonEntryResult.OK;
+    }
+
     public boolean setReplayFloor(int floor) {
         if (!canReplayFloor(floor)) {
             return false;
         }
-        player.loadCurrentFloor(floor);
+        if (canEnterReplay(floor) != DungeonEntryResult.OK) {
+            return false;
+        }
+
+        player.setPendingReplayFloor(floor);
         GameLogger.info(player.getCharacterName() + " replaying from floor " + floor);
         return true;
     }
@@ -198,12 +206,6 @@ public class MainMenuController {
         }
         if (player.isDead()) {
             return DungeonEntryResult.PLAYER_DEAD;
-        }
-
-        int highest = player.getHighestClearedFloor();
-        // Only apply level cap if player has cleared at least one floor
-        if (highest >= 1 && (player.getLevel() - highest) > 0) {
-            return DungeonEntryResult.OVER_LEVELED;
         }
         return DungeonEntryResult.OK;
     }

@@ -16,9 +16,8 @@ import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
 /**
- * Manages dungeon floor progression logic.
- * This service handles enemy generation, difficulty
- * scaling, boss floors, and wave logic.
+ * Manages dungeon floor progression logic. This service handles enemy
+ * generation, difficulty scaling, boss floors, and wave logic.
  */
 public class DungeonService {
 
@@ -31,12 +30,21 @@ public class DungeonService {
     public DungeonService(Player player) {
         this.player = player;
     }
-    
-    
+
     // Dungeon Initialisation
     public void initDungeon() {
-        if (player.getCurrentFloor() == 0) {
-            player.setCurrentFloor(GameConstants.DEFAULT_FLOOR);
+        int pending = player.getPendingReplayFloor();
+        if (pending > 0) {
+
+            player.loadCurrentFloor(pending);
+            player.clearPendingReplayFloor();
+        } else {
+
+            int next = player.getHighestClearedFloor() + 1;
+            if (next < GameConstants.DEFAULT_FLOOR) {
+                next = GameConstants.DEFAULT_FLOOR;
+            }
+            player.loadCurrentFloor(next);
         }
     }
 
@@ -145,7 +153,6 @@ public class DungeonService {
     /**
      * Builds events for a wave header. Call before each wave's battle.
      */
-    
     public List<DungeonEvent> buildWaveStartEvents(int wave, int totalWaves, Enemy enemy, boolean isBossFloor) {
         List<DungeonEvent> events = new ArrayList<>();
         if (isBossFloor) {
@@ -206,7 +213,8 @@ public class DungeonService {
         if (cleared > player.getHighestClearedFloor()) {
             player.setHighestClearedFloor(cleared);
         }
-        player.setCurrentFloor(cleared + 1);
+
+        player.loadCurrentFloor(cleared + 1);
 
         List<DungeonEvent> events = new ArrayList<>();
         if (player.getCurrentFloor() > GameConstants.MAX_FLOOR) {
