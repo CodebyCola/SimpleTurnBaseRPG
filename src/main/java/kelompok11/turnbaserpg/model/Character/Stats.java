@@ -142,7 +142,7 @@ public class Stats {
     public int getTotalMana() {
         return (this.baseMana + this.bonusMana);
     }
-    
+
     // constructor
     public Stats(
             int maxHP,
