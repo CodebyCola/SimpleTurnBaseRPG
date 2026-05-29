@@ -24,6 +24,7 @@ public class Player extends Character {
     private int maxExp;
     private int currentFloor;
     private int highestClearedFloor; // highest floor the player has already completed
+    private int pendingReplayFloor = -1;
     private int totalGold;
     private int id;
     private String password;
@@ -133,6 +134,10 @@ public class Player extends Character {
     public void setHighestClearedFloor(int floor) {
         this.highestClearedFloor = floor;
     }
+    
+    public int getPendingReplayFloor() { return pendingReplayFloor; }
+    public void setPendingReplayFloor(int floor) { this.pendingReplayFloor = floor; }
+    public void clearPendingReplayFloor() { this.pendingReplayFloor = -1; }
 
     /**
      * Player is "dead" when their current HP has hit 0. They can still use

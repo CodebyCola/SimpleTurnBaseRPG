@@ -24,16 +24,15 @@ public abstract class Character {
         this.stats = stats;
         activeBuffs = new ArrayList<>();
     }
-    
+
     public Character() {
-        
+        activeBuffs = new ArrayList<>();
     }
 
     public void setCharacterName(String characterName) {
         this.characterName = characterName;
     }
 
-    
     public String getCharacterName() {
         return characterName;
     }
@@ -82,11 +81,11 @@ public abstract class Character {
                 buff.remove(this);
 
                 activeBuffs.remove(i);
-                GameLogger.info(buff + " buff had been removed" );
+                GameLogger.info(buff + " buff had been removed");
             }
         }
     }
-    
+
     public abstract int basicAttack(Character target);
 
 }
