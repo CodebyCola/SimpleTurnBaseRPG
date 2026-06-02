@@ -1,18 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package kelompok11.turnbaserpg.game;
 
-import kelompok11.turnbaserpg.dao.InventoryDAO;
-import kelompok11.turnbaserpg.dao.PlayerDAO;
-import kelompok11.turnbaserpg.dao.SkillsDAO;
+package kelompok11.turnbaserpg.game.controller;
+
+import kelompok11.turnbaserpg.database.dao.InventoryDAO;
+import kelompok11.turnbaserpg.database.dao.PlayerDAO;
+import kelompok11.turnbaserpg.database.dao.SkillsDAO;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- * Handles loading a full player session from the database.
- */
 public class LoadManager {
 
     private final PlayerDAO playerDAO;

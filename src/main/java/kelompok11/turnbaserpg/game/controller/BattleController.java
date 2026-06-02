@@ -2,16 +2,15 @@ package kelompok11.turnbaserpg.game.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import kelompok11.turnbaserpg.enums.BattleResult;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
 import kelompok11.turnbaserpg.game.services.BattleEvent;
 import kelompok11.turnbaserpg.game.services.BattleService;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 
-// Control battle flow
 public class BattleController {
 
-    /** Functional interface so any view can receive events without coupling. */
+    
     @FunctionalInterface
     public interface EventListener {
         void onEvents(List<BattleEvent> events);
@@ -26,15 +25,15 @@ public class BattleController {
         this.eventListener  = eventListener;
     }
 
-    // Battle Entry Point
+    
 
     public void startBattle() {
         dispatch(battleService.initBattle());
         dispatch(battleService.beginPlayerTurn());
     }
 
-    // Player Action Handlers (called by the view)
-    // Ex: btn.handleAction(1)
+    
+    
     public boolean handleAction(int action, int secondaryIndex) {
         List<BattleEvent> events = switch (action) {
             case 1 -> battleService.actionBasicAttack();
@@ -61,7 +60,7 @@ public class BattleController {
             return true;
         }
 
-        // Enemy turn
+        
         dispatch(battleService.executeEnemyTurn());
 
         if (!battleService.isBattleOngoing()) {
@@ -69,22 +68,22 @@ public class BattleController {
             return true;
         }
 
-        // Next player turn
+        
         dispatch(battleService.beginPlayerTurn());
         return true;
     }
 
-    // Convenience overload for actions that don't need a secondary index.
+    
     public boolean handleAction(int action) {
         return handleAction(action, -1);
     }
 
-    // Battle State
+    
     public boolean isBattleOver()     { return result != null; }
     public BattleResult getResult()   { return result; }
     public BattleService getService() { return battleService; }
 
-    // Helpers
+    
     private void endBattle() {
         int levelBefore = battleService.getPlayer().getLevel();
         result = battleService.resolveBattle();

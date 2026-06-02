@@ -1,17 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.model.item.consumable;
 
-import kelompok11.turnbaserpg.enums.ConsumableType;
-import kelompok11.turnbaserpg.enums.PotionTier;
+import kelompok11.turnbaserpg.model.enums.ConsumableType;
+import kelompok11.turnbaserpg.model.enums.PotionTier;
 import kelompok11.turnbaserpg.model.character.Player;
 
-/**
- *
- * @author Pongo
- */
 public class HealthPotion extends Potion {
 
     public HealthPotion(PotionTier tier) {
@@ -27,5 +19,4 @@ public class HealthPotion extends Potion {
     public void use(Player target) {
         target.heal(this.effectValue);
     }
-
 }

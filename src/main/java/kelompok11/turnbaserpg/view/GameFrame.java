@@ -5,12 +5,8 @@ import java.awt.*;
 
 import kelompok11.turnbaserpg.game.controller.GameController;
 import kelompok11.turnbaserpg.model.character.Player;
-import kelompok11.turnbaserpg.enums.Role;
+import kelompok11.turnbaserpg.model.enums.Role;
 
-/**
- * Root window — CardLayout navigator. Login → MainMenu → Dungeon (→ Battle di
- * dalam Dungeon)
- */
 public class GameFrame extends JFrame {
 
     private static final String CARD_LOGIN = "login";
@@ -35,7 +31,7 @@ public class GameFrame extends JFrame {
         applyGlobalDefaults();
 
         gameController = new GameController(state -> {
-            /* navigation driven manually */ });
+             });
 
         root.setBackground(RPGTheme.BG_DARKEST);
         setContentPane(root);
@@ -47,12 +43,12 @@ public class GameFrame extends JFrame {
         setVisible(true);
     }
 
-    // ======================================================
-    // Panel builders
-    // ======================================================
+    
+    
+    
     private void buildLoginPanel() {
         loginPanel = new LoginPanel(
-                // onLogin
+                
                 (name, password) -> {
                     Player player = gameController.login(name, password);
                     if (player != null) {
@@ -62,10 +58,10 @@ public class GameFrame extends JFrame {
                         loginPanel.setStatus("Username atau password salah.", RPGTheme.ACCENT_EMBER);
                     }
                 },
-                // onRegister
+                
                 (name, password, roleStr) -> {
                     try {
-                        // roleStr bisa "WARRIOR", "MAGE", "ARCHER" (sudah difilter di LoginPanel)
+                        
                         Role role = Role.valueOf(roleStr.toUpperCase().trim());
                         Player player = gameController.register(name, password, role);
                         loginPanel.setStatus("", Color.WHITE);
@@ -83,9 +79,9 @@ public class GameFrame extends JFrame {
 
     private void buildMainMenuPanel(Player player) {
         mainMenuPanel = new MainMenuPanel(
-                // onEnterDungeon
+                
                 () -> showDungeon(gameController.getCurrentPlayer()),
-                // onLogout
+                
                 () -> {
                     gameController.saveGame();
                     root.remove(mainMenuPanel);
@@ -105,9 +101,9 @@ public class GameFrame extends JFrame {
         dungeonPanel = new DungeonPanel(
                 gameController,
                 player,
-                // onDungeonEnd
+                
                 () -> SwingUtilities.invokeLater(() -> {
-                    // Refresh player data setelah dungeon (level up, gold, dll)
+                    
                     Player p = gameController.getCurrentPlayer();
                     if (mainMenuPanel != null && p != null) {
                         mainMenuPanel.setPlayer(p);
@@ -117,9 +113,9 @@ public class GameFrame extends JFrame {
         );
     }
 
-    // ======================================================
-    // Navigation
-    // ======================================================
+    
+    
+    
     private void showMainMenu(Player player) {
         if (mainMenuPanel == null) {
             buildMainMenuPanel(player);
@@ -134,7 +130,7 @@ public class GameFrame extends JFrame {
         if (player == null) {
             return;
         }
-        // Rebuild tiap masuk dungeon agar state reset
+        
         if (dungeonPanel != null) {
             root.remove(dungeonPanel);
         }
@@ -144,9 +140,9 @@ public class GameFrame extends JFrame {
         SwingUtilities.invokeLater(() -> dungeonPanel.startDungeon());
     }
 
-    // ======================================================
-    // Global dark-theme defaults
-    // ======================================================
+    
+    
+    
     private void applyGlobalDefaults() {
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());

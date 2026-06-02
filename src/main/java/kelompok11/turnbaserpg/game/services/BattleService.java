@@ -3,9 +3,8 @@ package kelompok11.turnbaserpg.game.services;
 import static java.lang.Math.pow;
 import java.util.ArrayList;
 import java.util.List;
-import kelompok11.turnbaserpg.enums.BattleResult;
-import static kelompok11.turnbaserpg.enums.ConsumableType.REVIVE;
-import static kelompok11.turnbaserpg.enums.PotionTier.*;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
+import static kelompok11.turnbaserpg.model.enums.PotionTier.*;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.item.consumable.HealthPotion;
@@ -34,11 +33,9 @@ public class BattleService {
         this.enemyTurnCounter = 1;
     }
 
-    // Battle Initialisation
     public List<BattleEvent> initBattle() {
         playerTurn = true;
         enemyTurnCounter = 1;
-
         List<BattleEvent> events = new ArrayList<>();
         events.add(new BattleEvent(BattleEvent.Type.BATTLE_START,
                 "--- Battle Start: " + player.getCharacterName()
@@ -60,7 +57,6 @@ public class BattleService {
         return events;
     }
 
-//     Executes the enemy's turn and returns events describing what happened.
     public List<BattleEvent> executeEnemyTurn() {
         List<BattleEvent> events = new ArrayList<>();
         events.add(new BattleEvent(BattleEvent.Type.ENEMY_TURN,
@@ -94,8 +90,6 @@ public class BattleService {
         return events;
     }
 
-    // Player Actions (called by BattleController based on user input)
-    // Returns null if the action was invalid and the turn should NOT advance.
     public List<BattleEvent> actionBasicAttack() {
         int dmg = player.basicAttack(enemy);
         List<BattleEvent> events = new ArrayList<>();
@@ -111,7 +105,6 @@ public class BattleService {
         return events;
     }
 
-//   Player chooses Defend.
     public List<BattleEvent> actionDefend() {
         player.setDefend(true);
         playerDefend = true;
@@ -135,9 +128,7 @@ public class BattleService {
         }
 
         Skill skill = skills.get(skillIndex);
-        boolean success = skill.cast(player, enemy);
-
-        if (!success) {
+        if (!skill.cast(player, enemy)) {
             events.add(new BattleEvent(BattleEvent.Type.ERROR,
                     "Cannot use " + skill.getName() + " right now (cooldown or insufficient mana)."));
             return null;
@@ -168,7 +159,8 @@ public class BattleService {
             return null;
         }
 
-        boolean isRevive = player.getInventory().getSlot(inventoryIndex).getItem().getName().equals("Revive Potion");
+        boolean isRevive = player.getInventory().getSlot(inventoryIndex)
+                .getItem().getName().equals("Revive Potion");
 
         if (isRevive && !player.isDead()) {
             events.add(new BattleEvent(BattleEvent.Type.ERROR, "Cannot revive when you still alive!"));
@@ -186,7 +178,6 @@ public class BattleService {
         return events;
     }
 
-//     Player attempts to escape (50 % chance).
     public List<BattleEvent> actionEscape() {
         List<BattleEvent> events = new ArrayList<>();
         if (Math.random() < 0.5) {
@@ -199,53 +190,33 @@ public class BattleService {
         return events;
     }
 
-    // Battle State Queries
     public boolean isBattleOngoing() {
         return enemy.isAlive() && player.isAlive() && !isEscaped;
     }
 
-    public boolean isPlayerTurn() {
-        return playerTurn;
-    }
+    public boolean isPlayerTurn() { return playerTurn; }
+    public void setPlayerTurn(boolean v) { this.playerTurn = v; }
+    public Player getPlayer() { return player; }
+    public Enemy getEnemy() { return enemy; }
 
-    public void setPlayerTurn(boolean v) {
-        this.playerTurn = v;
-    }
-
-    public Player getPlayer() {
-        return player;
-    }
-
-    public Enemy getEnemy() {
-        return enemy;
-    }
-
-    // Battle Resolution
     public BattleResult resolveBattle() {
         BattleResult result = computeResult();
         if (result == BattleResult.WIN) {
             applyWinRewards();
         }
-        GameLogger.info("Battle resolved: " + result
-                + " | Player: " + player.getCharacterName());
+        GameLogger.info("Battle resolved: " + result + " | Player: " + player.getCharacterName());
         return result;
     }
 
-    // Helpers
     void gainMana() {
         switch (player.getRole()) {
-            case WARRIOR ->
-                player.getStats().increaseCurrentMana(10);
-            case MAGE ->
-                player.getStats().increaseCurrentMana(15);
-            case ARCHER ->
-                player.getStats().increaseCurrentMana(12);
+            case WARRIOR -> player.getStats().increaseCurrentMana(10);
+            case MAGE    -> player.getStats().increaseCurrentMana(15);
+            case ARCHER  -> player.getStats().increaseCurrentMana(12);
         }
     }
 
     private void applyWinRewards() {
-        // BUG FIX: old formula used (level * 0.1) which gave ~5 EXP at level 1.
-        // Correct formula scales rewards properly with player level.
         int exp = (int) (GameConstants.BASE_EXP_REWARD
                 * Math.pow(GameConstants.EXP_SCALING_PER_LEVEL, player.getLevel() - 1));
 
@@ -266,15 +237,13 @@ public class BattleService {
             int gold = (int) (GameConstants.BASE_GOLD_REWARD
                     * (pow(GameConstants.GOLD_SCALING_PER_LEVEL, player.getLevel())));
             player.gainGold(gold);
-            GameLogger.info("[GOLD REWARD] " + player.getCharacterName()
-                    + " gained " + gold + " gold");
+            GameLogger.info("[GOLD REWARD] " + player.getCharacterName() + " gained " + gold + " gold");
         }
 
         if (Math.random() < GameConstants.LOOT_DROP_RATE) {
             if (Math.random() < 0.01) {
-                player.getInventory().addItem(new RevivePotion(LARGE, REVIVE));
+                player.getInventory().addItem(new RevivePotion(LARGE));
                 GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Revive Potion");
-
             } else if (Math.random() < 0.5) {
                 player.getInventory().addItem(new HealthPotion(SMALL));
                 GameLogger.info("[LOOT] " + player.getCharacterName() + " found a Health Potion");
@@ -286,12 +255,8 @@ public class BattleService {
     }
 
     private BattleResult computeResult() {
-        if (!player.isAlive()) {
-            return BattleResult.LOSE;
-        }
-        if (isEscaped) {
-            return BattleResult.ESCAPED;
-        }
+        if (!player.isAlive()) return BattleResult.LOSE;
+        if (isEscaped)         return BattleResult.ESCAPED;
         return BattleResult.WIN;
     }
 }

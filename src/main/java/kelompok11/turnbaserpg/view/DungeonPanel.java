@@ -5,55 +5,44 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.util.List;
 
-import kelompok11.turnbaserpg.enums.BattleResult;
-import kelompok11.turnbaserpg.enums.Difficulty;
-import kelompok11.turnbaserpg.game.controller.DungeonSessionController;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
+import kelompok11.turnbaserpg.model.enums.Difficulty;
 import kelompok11.turnbaserpg.game.controller.GameController;
 import kelompok11.turnbaserpg.game.services.DungeonEvent;
 import kelompok11.turnbaserpg.game.services.DungeonService;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 
-// DungeonPanel — manages the dungeon loop on a background thread.
-// All dungeon service calls are routed through DungeonSessionController.
 public class DungeonPanel extends JPanel {
 
     private final GameController gameController;
     private final Player player;
     private final Runnable onDungeonEnd;
 
-    // Sub-panels via CardLayout
     private JPanel cardHolder;
     private static final String CARD_LOG    = "log";
     private static final String CARD_BATTLE = "battle";
 
-    // Dungeon log
     private JTextPane dungeonLog;
     private StyledDocument logDoc;
 
-    // Battle panel (reused per fight)
     private BattlePanel battlePanel;
 
-    // Status bar
     private JLabel floorLabel;
     private RPGComponents.StatBar hpBar, mpBar;
 
-    // Advance bar
     private JPanel advanceBar;
     private RPGComponents.RPGButton advanceBtn, retreatBtn;
     private JLabel advanceLabel;
 
-    // Synchronization for advance decision
     private final Object advanceLock = new Object();
     private volatile boolean advanceDecision = false;
     private volatile boolean advanceAnswered = false;
 
-    // Synchronization for battle completion
     private final Object battleLock = new Object();
     private volatile boolean battleDone = false;
 
-    // Controller for all dungeon service operations
-    private DungeonSessionController dungeonController;
+    private DungeonService dungeonService;
 
     public DungeonPanel(GameController gameController, Player player, Runnable onDungeonEnd) {
         this.gameController = gameController;
@@ -64,9 +53,6 @@ public class DungeonPanel extends JPanel {
         buildUI();
     }
 
-    // ======================================================
-    // Build UI
-    // ======================================================
     private void buildUI() {
         add(buildStatusBar(), BorderLayout.NORTH);
 
@@ -74,7 +60,6 @@ public class DungeonPanel extends JPanel {
         cardHolder.setBackground(RPGTheme.BG_DARKEST);
         cardHolder.add(buildLogCard(), CARD_LOG);
 
-        // BattlePanel notifies via battleLock when battle ends
         battlePanel = new BattlePanel(() -> {
             synchronized (battleLock) {
                 battleDone = true;
@@ -163,13 +148,9 @@ public class DungeonPanel extends JPanel {
         return bar;
     }
 
-    // ======================================================
-    // Start dungeon loop
-    // ======================================================
     public void startDungeon() {
-        // Create controller — all service access goes through it
-        dungeonController = new DungeonSessionController(player);
-        dungeonController.initDungeon();
+        dungeonService = new DungeonService(player);
+        dungeonService.initDungeon();
         refreshStatusBar();
         appendLog("=== Memasuki Dungeon ===", RPGTheme.ACCENT_GOLD, true);
 
@@ -178,17 +159,13 @@ public class DungeonPanel extends JPanel {
         t.start();
     }
 
-    // ======================================================
-    // Dungeon loop (background thread) — all calls via controller
-    // ======================================================
     private void dungeonLoop() {
-        while (dungeonController.hasMoreFloors()) {
-            int floor = dungeonController.getCurrentFloor();
-            boolean isBoss = dungeonController.isBossFloor(floor);
-            Difficulty diff = dungeonController.determineDifficulty(floor);
+        while (dungeonService.hasMoreFloors()) {
+            int floor = dungeonService.getCurrentFloor();
+            boolean isBoss = dungeonService.isBossFloor(floor);
+            Difficulty diff = dungeonService.determineDifficulty(floor);
 
-            // Floor start events
-            dispatchDungeonEvents(dungeonController.buildFloorStartEvents(floor, isBoss, diff));
+            dispatchDungeonEvents(dungeonService.buildFloorStartEvents(floor, isBoss, diff));
 
             boolean floorCleared = runFloor(floor, isBoss, diff);
 
@@ -199,11 +176,9 @@ public class DungeonPanel extends JPanel {
                 return;
             }
 
-            // Skill reward
-            dispatchDungeonEvents(dungeonController.applySkillReward(floor));
+            dispatchDungeonEvents(dungeonService.applySkillReward(floor));
 
-            // Advance floor counter
-            List<DungeonEvent> advEvents = dungeonController.advanceFloor();
+            List<DungeonEvent> advEvents = dungeonService.advanceFloor();
             dispatchDungeonEvents(advEvents);
 
             boolean complete = advEvents.stream()
@@ -214,10 +189,9 @@ public class DungeonPanel extends JPanel {
                 return;
             }
 
-            if (!dungeonController.hasMoreFloors()) break;
+            if (!dungeonService.hasMoreFloors()) break;
 
-            // Ask player to advance
-            askAdvance(dungeonController.getCurrentFloor());
+            askAdvance(dungeonService.getCurrentFloor());
             if (!advanceDecision) {
                 appendLog("\nAnda memilih untuk mundur. Sampai jumpa!", RPGTheme.ACCENT_SILVER, false);
                 sleep(1000);
@@ -228,20 +202,19 @@ public class DungeonPanel extends JPanel {
     }
 
     private boolean runFloor(int floor, boolean isBoss, Difficulty diff) {
-        int totalWaves = dungeonController.wavesForFloor(isBoss);
+        int totalWaves = dungeonService.wavesForFloor(isBoss);
 
         for (int wave = 1; wave <= totalWaves; wave++) {
-            // Controller generates enemy
             Enemy enemy = isBoss
-                ? dungeonController.generateBossEnemy(diff)
-                : dungeonController.generateEnemy(diff);
-            dungeonController.scaleEnemyStats(enemy, diff, isBoss);
+                ? dungeonService.generateBossEnemy(diff)
+                : dungeonService.generateEnemy(diff);
+            dungeonService.scaleEnemyStats(enemy, diff, isBoss);
 
-            dispatchDungeonEvents(dungeonController.buildWaveStartEvents(wave, totalWaves, enemy, isBoss));
+            dispatchDungeonEvents(dungeonService.buildWaveStartEvents(wave, totalWaves, enemy, isBoss));
 
             BattleResult result = runBattle(enemy);
 
-            DungeonService.FloorOutcome outcome = dungeonController.processBattleResult(result);
+            DungeonService.FloorOutcome outcome = dungeonService.processBattleResult(result);
             dispatchDungeonEvents(outcome.getEvents());
 
             if (!outcome.isWaveCleared()) {
@@ -259,7 +232,6 @@ public class DungeonPanel extends JPanel {
         return true;
     }
 
-    // Runs a single battle by showing BattlePanel and blocking until done
     private BattleResult runBattle(Enemy enemy) {
         synchronized (battleLock) {
             battleDone = false;
@@ -278,16 +250,12 @@ public class DungeonPanel extends JPanel {
         }
 
         BattleResult result = battlePanel.getLastResult();
-
         SwingUtilities.invokeLater(() -> showCard(CARD_LOG));
         sleep(300);
 
         return result != null ? result : BattleResult.LOSE;
     }
 
-    // ======================================================
-    // Advance prompt (blocks background thread)
-    // ======================================================
     private void askAdvance(int nextFloor) {
         SwingUtilities.invokeLater(() -> {
             advanceLabel.setText("Floor " + (nextFloor - 1)
@@ -317,21 +285,21 @@ public class DungeonPanel extends JPanel {
         }
     }
 
-    // ======================================================
-    // Helpers
-    // ======================================================
     private void showCard(String name) {
         ((CardLayout) cardHolder.getLayout()).show(cardHolder, name);
     }
 
-    // Status bar refresh reads from controller snapshot — no direct Player access
     private void refreshStatusBar() {
-        if (dungeonController == null) return;
-        DungeonSessionController.PlayerStatusSnapshot snap = dungeonController.getPlayerStatusSnapshot();
+        if (dungeonService == null) return;
+        int floor = dungeonService.getCurrentFloor();
+        int currentHp  = player.getStats().getCurrentHP();
+        int maxHp      = player.getStats().getMaxHP();
+        int currentMp  = player.getStats().getCurrentMana();
+        int maxMp      = player.getStats().getBaseMana();
         SwingUtilities.invokeLater(() -> {
-            floorLabel.setText("DUNGEON — Floor " + snap.floor() + " / 100");
-            hpBar.setValues(snap.currentHp(), snap.maxHp());
-            mpBar.setValues(snap.currentMana(), snap.maxMana());
+            floorLabel.setText("DUNGEON — Floor " + floor + " / 100");
+            hpBar.setValues(currentHp, maxHp);
+            mpBar.setValues(currentMp, maxMp);
         });
     }
 
@@ -361,12 +329,13 @@ public class DungeonPanel extends JPanel {
                 StyleConstants.setBold(s, bold);
                 logDoc.insertString(logDoc.getLength(), text + "\n", s);
                 dungeonLog.setCaretPosition(logDoc.getLength());
-            } catch (BadLocationException ex) { /* ignore */ }
+            } catch (BadLocationException ex) {  }
         });
     }
 
     private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
+        try { Thread.sleep(ms); }
+        catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
     }
 
     private Color colorForType(DungeonEvent.Type type) {
@@ -383,5 +352,4 @@ public class DungeonPanel extends JPanel {
             default               -> RPGTheme.TEXT_PRIMARY;
         };
     }
-
 }

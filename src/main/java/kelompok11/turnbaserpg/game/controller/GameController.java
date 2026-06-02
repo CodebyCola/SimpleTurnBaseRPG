@@ -1,16 +1,11 @@
 package kelompok11.turnbaserpg.game.controller;
 
-import kelompok11.turnbaserpg.enums.Role;
-import kelompok11.turnbaserpg.game.GameManager;
-import kelompok11.turnbaserpg.game.LoadManager;
-import kelompok11.turnbaserpg.game.SaveManager;
+import kelompok11.turnbaserpg.model.enums.Role;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-// Main controller that controll the login, dungeon, battle flow
 public class GameController {
 
-    // State Change Notification
     public enum GameState {
         MAIN_MENU,
         IN_DUNGEON,
@@ -19,11 +14,9 @@ public class GameController {
 
     @FunctionalInterface
     public interface StateListener {
-
         void onStateChanged(GameState newState);
     }
 
-    private final GameManager gameManager;
     private final SaveManager saveManager;
     private final LoadManager loadManager;
     private final StateListener stateListener;
@@ -32,13 +25,11 @@ public class GameController {
     private GameState currentState = GameState.MAIN_MENU;
 
     public GameController(StateListener stateListener) {
-        this.gameManager = new GameManager();
         this.saveManager = new SaveManager();
         this.loadManager = new LoadManager();
         this.stateListener = stateListener;
     }
 
-    // Authentication
     public Player login(String name, String password) {
         Player player = loadManager.load(name, password);
         if (player != null) {
@@ -51,21 +42,18 @@ public class GameController {
     }
 
     public Player register(String name, String password, Role role) {
+        if (saveManager.usernameExists(name)) {
+            GameLogger.warning("GameController: " + name + " username already in database");
+            return null;
+        }
         Player player = new Player(name, role);
         player.setPassword(password);
-        if (saveManager.cekUserName(player.getCharacterName())) {
-            GameLogger.warning("GameController: " + name + " this username already in database");
-            return null;
-        } else {
-            saveManager.save(player);
-            currentPlayer = player;
-            GameLogger.info("GameController: registered player " + name + " as " + role);
-            return player;
-        }
-
+        saveManager.save(player);
+        currentPlayer = player;
+        GameLogger.info("GameController: registered player " + name + " as " + role);
+        return player;
     }
 
-    // Save / Load
     public void saveGame() {
         if (currentPlayer == null) {
             GameLogger.warning("GameController: saveGame called with no active player");
@@ -74,7 +62,6 @@ public class GameController {
         saveManager.save(currentPlayer);
     }
 
-    // Dungeon Flow   
     public DungeonController createDungeonController(
             DungeonController.DungeonEventListener dungeonListener,
             DungeonController.BattleEventListener battleListener,
@@ -85,10 +72,9 @@ public class GameController {
             GameLogger.warning("GameController: cannot create DungeonController — no active player");
             return null;
         }
-
         transitionTo(GameState.IN_DUNGEON);
-        return new DungeonController(
-                currentPlayer, dungeonListener, battleListener, battleInput, advancePrompt);
+        return new DungeonController(currentPlayer, dungeonListener, battleListener,
+                battleInput, advancePrompt);
     }
 
     public void onDungeonSessionEnded() {
@@ -96,18 +82,9 @@ public class GameController {
         transitionTo(GameState.MAIN_MENU);
     }
 
-    // State
-    public GameState getCurrentState() {
-        return currentState;
-    }
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    public boolean isLoggedIn() {
-        return currentPlayer != null;
-    }
+    public GameState getCurrentState() { return currentState; }
+    public Player getCurrentPlayer() { return currentPlayer; }
+    public boolean isLoggedIn() { return currentPlayer != null; }
 
     private void transitionTo(GameState newState) {
         currentState = newState;

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.model.character;
 
 import java.util.ArrayList;
@@ -9,10 +5,6 @@ import kelompok11.turnbaserpg.model.buff.Buff;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- *
- * @author Pongo
- */
 public abstract class Character {
 
     protected String characterName;
@@ -53,12 +45,10 @@ public abstract class Character {
         stats.heal(amount);
     }
 
-    // Buff Systems
     public void addBuff(Buff buff) {
         if (activeBuffs.size() >= GameConstants.MAX_ACTIVE_BUFFS) {
             return;
         }
-
         buff.use(this);
         activeBuffs.add(buff);
         GameLogger.info(characterName + " gain " + buff + " buff");
@@ -69,17 +59,11 @@ public abstract class Character {
     }
 
     public void updateBuffs() {
-
         for (int i = activeBuffs.size() - 1; i >= 0; i--) {
-
             Buff buff = activeBuffs.get(i);
-
             buff.decreaseDuration();
-
             if (buff.isExpired()) {
-
                 buff.remove(this);
-
                 activeBuffs.remove(i);
                 GameLogger.info(buff + " buff had been removed");
             }
@@ -87,5 +71,4 @@ public abstract class Character {
     }
 
     public abstract int basicAttack(Character target);
-
 }

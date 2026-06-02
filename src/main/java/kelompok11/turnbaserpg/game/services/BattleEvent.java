@@ -1,9 +1,5 @@
 package kelompok11.turnbaserpg.game.services;
 
-/**
- * Carries a single log message produced during a battle action.
- * Controllers receive these events and route them to the appropriate view.
- */
 public class BattleEvent {
 
     public enum Type {

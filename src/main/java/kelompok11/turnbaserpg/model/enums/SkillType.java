@@ -2,26 +2,26 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Enum.java to edit this template
  */
-package kelompok11.turnbaserpg.enums;
+package kelompok11.turnbaserpg.model.enums;
 
 /**
  *
  * @author Pongo
  */
-public enum ItemRarity {
-    COMMON("Common"),
-    RARE("Rare"),
-    EPIC("Epic"),
-    LEGENDARY("Legendary");
+public enum SkillType {
+    ATTACK("Attack"),
+    DEFEND("Defend"),
+    HEAL("Heal"),
+    DEBUFF("Debuff"),
+    BUFF("Buff");
 
-    private final String displayName;
+    private String displayName;
 
-    ItemRarity(String displayName) {
+    SkillType(String displayName) {
         this.displayName = displayName;
     }
 
     public String getDisplayName() {
         return displayName;
     }
-
 }

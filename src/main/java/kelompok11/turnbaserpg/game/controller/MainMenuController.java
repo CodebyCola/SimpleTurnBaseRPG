@@ -117,17 +117,12 @@ public class MainMenuController {
         return player.getUnlockedSkills();
     }
 
-    /**
-     * True if the player has HP <= 0 and cannot enter the dungeon.
-     */
+    
     public boolean isPlayerDead() {
         return player != null && player.isDead();
     }
 
-    /**
-     * Use an item from inventory by slot index. Returns a result message for
-     * the UI to display.
-     */
+    
     public String useItem(int slotIndex) {
         if (player == null) {
             return "No player loaded.";

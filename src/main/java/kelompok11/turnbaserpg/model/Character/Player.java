@@ -1,21 +1,12 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.model.character;
 
-import kelompok11.turnbaserpg.model.character.Character;
 import java.util.ArrayList;
-import kelompok11.turnbaserpg.enums.*;
+import kelompok11.turnbaserpg.model.enums.Role;
 import kelompok11.turnbaserpg.model.skill.BasicHeal;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- * Represents a player character. Extends Character with leveling, gold, floor
- * tracking, and skill management.
- */
 public class Player extends Character {
 
     private Role role;
@@ -23,7 +14,7 @@ public class Player extends Character {
     private int currentExp;
     private int maxExp;
     private int currentFloor;
-    private int highestClearedFloor; // highest floor the player has already completed
+    private int highestClearedFloor;
     private int pendingReplayFloor = -1;
     private int totalGold;
     private int id;
@@ -42,19 +33,14 @@ public class Player extends Character {
         this.inventory = new Inventory();
         this.maxExp = GameConstants.INITIAL_EXP_REQUIRED;
         this.unlockedSkills = new ArrayList<>();
-        // BasicHeal is the default starting skill
         this.unlockSkill(new BasicHeal());
     }
 
     public Player() {
-        this.role = Role.WARRIOR; // default; overwritten by setRole() during login
+        this.role = Role.WARRIOR;
         this.stats = new Stats();
         this.inventory = new Inventory();
         this.unlockedSkills = new ArrayList<>();
-    }
-
-    public Player getPlayerDetail() { // ambil detail player untuk view
-        return this;
     }
 
     public int getId() {
@@ -109,6 +95,7 @@ public class Player extends Character {
         return currentFloor;
     }
 
+    @Override
     public Stats getStats() {
         return stats;
     }
@@ -119,10 +106,6 @@ public class Player extends Character {
         }
     }
 
-    /**
-     * Used by DAO / persistence layer to restore the exact saved floor value.
-     * Bypasses the "only advance" guard so the loaded value is always applied.
-     */
     public void loadCurrentFloor(int currentFloor) {
         this.currentFloor = currentFloor;
     }
@@ -134,33 +117,24 @@ public class Player extends Character {
     public void setHighestClearedFloor(int floor) {
         this.highestClearedFloor = floor;
     }
-    
+
     public int getPendingReplayFloor() { return pendingReplayFloor; }
     public void setPendingReplayFloor(int floor) { this.pendingReplayFloor = floor; }
     public void clearPendingReplayFloor() { this.pendingReplayFloor = -1; }
 
-    /**
-     * Player is "dead" when their current HP has hit 0. They can still use
-     * potions to revive themselves from the main menu.
-     */
     public boolean isDead() {
         return stats.getCurrentHP() <= 0;
     }
 
-    /**
-     * Restores the player to full HP and mana (e.g. after using a potion from
-     * the main menu or on explicit revive). Does NOT change floor.
-     */
     public boolean revive() {
-        if (isDead()) {
-            GameLogger.warning("Cannot revive character");
+        if (!isDead()) {
+            GameLogger.warning("Cannot revive character that is still alive");
             return false;
-        } else {
-            stats.setCurrentHP(stats.getMaxHP());
-            stats.setCurrentMana(stats.getBaseMana());
-            GameLogger.info(characterName + " revived to full HP/Mana");
-            return true;
         }
+        stats.setCurrentHP(stats.getMaxHP());
+        stats.setCurrentMana(stats.getBaseMana());
+        GameLogger.info(characterName + " revived to full HP/Mana");
+        return true;
     }
 
     public int getTotalGold() {
@@ -196,19 +170,20 @@ public class Player extends Character {
     }
 
     private static Stats createStatsByRole(Role role) {
-        switch (role) {
-            case WARRIOR:
-                return new Stats(GameConstants.WarriorStats.INITIAL_HP, GameConstants.WarriorStats.INITIAL_ATK,
-                        GameConstants.WarriorStats.INITIAL_DEF, GameConstants.WarriorStats.INITIAL_MAGIC, GameConstants.WarriorStats.INITIAL_MANA);
-            case MAGE:
-                return new Stats(GameConstants.MageStats.INITIAL_HP, GameConstants.MageStats.INITIAL_ATK,
-                        GameConstants.MageStats.INITIAL_DEF, GameConstants.MageStats.INITIAL_MAGIC, GameConstants.MageStats.INITIAL_MANA);
-            case ARCHER:
-                return new Stats(GameConstants.ArcherStats.INITIAL_HP, GameConstants.ArcherStats.INITIAL_ATK,
-                        GameConstants.ArcherStats.INITIAL_DEF, GameConstants.ArcherStats.INITIAL_MAGIC, GameConstants.ArcherStats.INITIAL_MANA);
-            default:
-                throw new IllegalArgumentException("Invalid role: " + role);
-        }
+        return switch (role) {
+            case WARRIOR -> new Stats(
+                    GameConstants.WarriorStats.INITIAL_HP, GameConstants.WarriorStats.INITIAL_ATK,
+                    GameConstants.WarriorStats.INITIAL_DEF, GameConstants.WarriorStats.INITIAL_MAGIC,
+                    GameConstants.WarriorStats.INITIAL_MANA);
+            case MAGE -> new Stats(
+                    GameConstants.MageStats.INITIAL_HP, GameConstants.MageStats.INITIAL_ATK,
+                    GameConstants.MageStats.INITIAL_DEF, GameConstants.MageStats.INITIAL_MAGIC,
+                    GameConstants.MageStats.INITIAL_MANA);
+            case ARCHER -> new Stats(
+                    GameConstants.ArcherStats.INITIAL_HP, GameConstants.ArcherStats.INITIAL_ATK,
+                    GameConstants.ArcherStats.INITIAL_DEF, GameConstants.ArcherStats.INITIAL_MAGIC,
+                    GameConstants.ArcherStats.INITIAL_MANA);
+        };
     }
 
     public void levelUp() {
@@ -283,25 +258,11 @@ public class Player extends Character {
         }
     }
 
+    @Override
     public int basicAttack(Character target) {
-
-        switch (role) {
-            case WARRIOR -> {
-                int totalAttack = stats.getTotalAttack();
-                return target.takeDamage(totalAttack);
-            }
-            case ARCHER -> {
-                int totalAttack = stats.getTotalAttack();
-                return target.takeDamage(totalAttack);
-            }
-            case MAGE -> {
-                int totalMagic = stats.getTotalMagic();
-                return target.takeDamage(totalMagic);
-            }
-
-            default -> {
-                return 0;
-            }
-        }
+        return switch (role) {
+            case WARRIOR, ARCHER -> target.takeDamage(stats.getTotalAttack());
+            case MAGE -> target.takeDamage(stats.getTotalMagic());
+        };
     }
 }

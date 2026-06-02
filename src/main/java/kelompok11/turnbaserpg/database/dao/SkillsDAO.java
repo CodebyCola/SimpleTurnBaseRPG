@@ -1,8 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package kelompok11.turnbaserpg.dao;
+package kelompok11.turnbaserpg.database.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,10 +9,6 @@ import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.*;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- *
- * @author Pongo
- */
 public class SkillsDAO {
 
     public void save(Player player) {
@@ -26,7 +18,8 @@ public class SkillsDAO {
         try (Connection conn = Connector.connect()) {
             conn.setAutoCommit(false);
 
-            try (PreparedStatement deletePs = conn.prepareStatement(deleteQuery); PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
+            try (PreparedStatement deletePs = conn.prepareStatement(deleteQuery);
+                 PreparedStatement insertPs = conn.prepareStatement(insertQuery)) {
 
                 deletePs.setInt(1, player.getId());
                 deletePs.executeUpdate();
@@ -37,15 +30,13 @@ public class SkillsDAO {
                     insertPs.addBatch();
                 }
                 insertPs.executeBatch();
-
                 conn.commit();
                 GameLogger.info("Skills saved for player " + player.getCharacterName());
 
             } catch (SQLException e) {
-                conn.rollback(); // DELETE is undone if INSERT fails
+                conn.rollback();
                 GameLogger.error("Failed to save skills: " + e.getMessage());
             }
-
         } catch (SQLException e) {
             GameLogger.error("Failed to open connection: " + e.getMessage());
         }
@@ -53,16 +44,16 @@ public class SkillsDAO {
 
     public void read(Player player) {
         String query = "SELECT skill_name FROM player_skills WHERE player_id = ?";
-        try (Connection conn = Connector.connect(); PreparedStatement ps = conn.prepareStatement(query)) {
+
+        try (Connection conn = Connector.connect();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setInt(1, player.getId());
 
             try (ResultSet rs = ps.executeQuery()) {
                 player.getUnlockedSkills().clear();
-
                 while (rs.next()) {
-                    String skillName = rs.getString("skill_name");
-                    Skill skill = createSkillByName(skillName);
+                    Skill skill = createSkillByName(rs.getString("skill_name"));
                     if (skill != null) {
                         player.unlockSkill(skill);
                     }
@@ -75,40 +66,25 @@ public class SkillsDAO {
     }
 
     private Skill createSkillByName(String name) {
-        switch (name) {
-            case "Basic Heal":
-                return new BasicHeal();
-            case "Fire Ball":
-                return new FireBall();
-            case "Thunder Strike":
-                return new ThunderStrike();
-            case "Ice Spear":
-                return new IceSpear();
-            case "Iron Wall":
-                return new IronWall();
-            case "Shadow Slash":
-                return new ShadowSlash();
-            case "Earth Crusher":
-                return new EarthCrusher();
-            case "Dragon Fury":
-                return new DragonFury();
-            case "Greater Heal":
-                return new GreaterHeal();
-            case "Life Drain":
-                return new LifeDrain();
-            case "Berserker Rage":
-                return new BerserkerRage();
-            case "Arcane Power":
-                return new ArcanePower();
-            case "Guardian Aura":
-                return new GuardianAura();
-            case "Stone Body":
-                return new StoneBody();
-            case "Mana Buff":
-                return null; // Not in skill pool, handled separately
-            default:
+        return switch (name) {
+            case "Basic Heal"     -> new BasicHeal();
+            case "Fire Ball"      -> new FireBall();
+            case "Thunder Strike" -> new ThunderStrike();
+            case "Ice Spear"      -> new IceSpear();
+            case "Iron Wall"      -> new IronWall();
+            case "Shadow Slash"   -> new ShadowSlash();
+            case "Earth Crusher"  -> new EarthCrusher();
+            case "Dragon Fury"    -> new DragonFury();
+            case "Greater Heal"   -> new GreaterHeal();
+            case "Life Drain"     -> new LifeDrain();
+            case "Berserker Rage" -> new BerserkerRage();
+            case "Arcane Power"   -> new ArcanePower();
+            case "Guardian Aura"  -> new GuardianAura();
+            case "Stone Body"     -> new StoneBody();
+            default -> {
                 GameLogger.warning("Unknown skill name: " + name);
-                return null;
-        }
+                yield null;
+            }
+        };
     }
 }
