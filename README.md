@@ -344,4 +344,6 @@ Aplikasi mencatat log terstruktur ke file `logs/game.log` melalui `GameLogger`. 
 
 ## 👥 Tim Pengembang
 
-Dibuat oleh **Kelompok 11**.
+Dibuat oleh **Kelompok 11**:
+- Aushaf Fathin Irsyad Nabil - 123240092
+- Nicolaus Narindra Lianto   - 123240100
