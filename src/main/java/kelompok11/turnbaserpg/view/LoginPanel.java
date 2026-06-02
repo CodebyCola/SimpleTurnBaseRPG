@@ -7,16 +7,9 @@ import java.awt.geom.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/**
- * Login / Register screen with dark fantasy aesthetic.
- *
- * Callbacks (replace with GameController calls as needed):
- *   onLogin(name, password)
- *   onRegister(name, password, role)
- */
 public class LoginPanel extends JPanel {
 
-    // Callbacks
+    
     private BiConsumer<String, String> onLogin;
     private TriConsumer<String, String, String> onRegister;
 
@@ -25,23 +18,23 @@ public class LoginPanel extends JPanel {
         void accept(A a, B b, C c);
     }
 
-    // Tabs
+    
     private JPanel loginTab;
     private JPanel registerTab;
     private JButton tabLogin;
     private JButton tabRegister;
     private boolean showLogin = true;
 
-    // Login fields
+    
     private RPGComponents.RPGTextField loginName;
     private RPGComponents.RPGPasswordField loginPassword;
 
-    // Register fields
+    
     private RPGComponents.RPGTextField regName;
     private RPGComponents.RPGPasswordField regPassword;
     private JComboBox<String> roleCombo;
 
-    // Status
+    
     private JLabel statusLabel;
 
     public LoginPanel(BiConsumer<String, String> onLogin,
@@ -54,7 +47,7 @@ public class LoginPanel extends JPanel {
     }
 
     private void buildUI() {
-        // ---- BACKGROUND PANEL with decorative elements ----
+        
         JPanel root = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -65,23 +58,23 @@ public class LoginPanel extends JPanel {
         root.setBackground(RPGTheme.BG_DARKEST);
         add(root, BorderLayout.CENTER);
 
-        // ---- CENTER CARD ----
+        
         RPGComponents.DarkPanel card = new RPGComponents.DarkPanel(
             RPGTheme.BG_DARK, RPGTheme.BORDER_GOLD, 12);
         card.setLayout(new BorderLayout(0, 0));
         card.setPreferredSize(new Dimension(420, 560));
         card.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        // Header
+        
         card.add(buildHeader(), BorderLayout.NORTH);
 
-        // Tabs + Content (center)
+        
         JPanel center = new JPanel(new BorderLayout(0, 0));
         center.setOpaque(false);
         center.setBorder(BorderFactory.createEmptyBorder(0, 24, 24, 24));
         center.add(buildTabBar(), BorderLayout.NORTH);
 
-        // Card holder
+        
         JPanel formHolder = new JPanel(new CardLayout());
         formHolder.setOpaque(false);
         loginTab    = buildLoginForm();
@@ -90,7 +83,7 @@ public class LoginPanel extends JPanel {
         formHolder.add(registerTab, "register");
         center.add(formHolder, BorderLayout.CENTER);
 
-        // Status label
+        
         statusLabel = RPGComponents.label("", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
         statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         JPanel statusRow = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -111,7 +104,7 @@ public class LoginPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                // Top gold strip
+                
                 g2.setColor(RPGTheme.ACCENT_GOLD);
                 g2.fillRect(0, 0, getWidth(), 3);
                 g2.dispose();
@@ -121,7 +114,7 @@ public class LoginPanel extends JPanel {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.setBorder(BorderFactory.createEmptyBorder(32, 24, 20, 24));
 
-        // Dragon/sword icon
+        
         JLabel icon = new JLabel("⚔", SwingConstants.CENTER);
         icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
         icon.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -186,7 +179,7 @@ public class LoginPanel extends JPanel {
                 int ty = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
                 g.drawString(getText(), tx, ty);
             }
-            // expose isActive for switching
+            
             public void setActive(boolean a) { isActive = a; repaint(); }
         };
         btn.setContentAreaFilled(false);
@@ -200,7 +193,7 @@ public class LoginPanel extends JPanel {
     @SuppressWarnings("unchecked")
     private void switchTab(boolean toLogin, JPanel tabBar) {
         showLogin = toLogin;
-        // Update tab active state via reflection-like approach
+        
         Component[] tabs = tabBar.getComponents();
         for (Component c : tabs) {
             if (c instanceof JButton btn) {
@@ -208,10 +201,10 @@ public class LoginPanel extends JPanel {
                 try {
                     btn.getClass().getMethod("setActive", boolean.class)
                        .invoke(btn, isLogin == toLogin);
-                } catch (Exception ex) { /* ignore */ }
+                } catch (Exception ex) {  }
             }
         }
-        // Switch card
+        
         Container parent = loginTab.getParent();
         if (parent.getLayout() instanceof CardLayout cl) {
             cl.show(parent, toLogin ? "login" : "register");
@@ -238,7 +231,7 @@ public class LoginPanel extends JPanel {
         loginBtn.addActionListener(e -> doLogin());
         p.add(loginBtn);
 
-        // Enter key on password
+        
         loginPassword.addActionListener(e -> doLogin());
 
         return p;
@@ -259,7 +252,7 @@ public class LoginPanel extends JPanel {
         roleCombo.setFont(RPGTheme.FONT_BODY);
         roleCombo.setBorder(BorderFactory.createLineBorder(RPGTheme.BORDER_GOLD, 1));
 
-        // Role descriptions panel
+        
         JLabel roleDesc = RPGComponents.label(getRoleDesc(0), RPGTheme.TEXT_SECONDARY, RPGTheme.FONT_SMALL);
         roleDesc.setAlignmentX(Component.LEFT_ALIGNMENT);
         roleCombo.addActionListener(e -> roleDesc.setText(getRoleDesc(roleCombo.getSelectedIndex())));
@@ -333,12 +326,12 @@ public class LoginPanel extends JPanel {
         statusLabel.setForeground(color);
     }
 
-    /** Decorative background: subtle grid + corner ornaments */
+    
     private void drawBackground(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         int w = getWidth(), h = getHeight();
 
-        // Radial vignette
+        
         RadialGradientPaint vignette = new RadialGradientPaint(
             new Point(w / 2, h / 2),
             Math.max(w, h) * 0.7f,
@@ -348,13 +341,13 @@ public class LoginPanel extends JPanel {
         g2.setPaint(vignette);
         g2.fillRect(0, 0, w, h);
 
-        // Subtle grid lines
+        
         g2.setColor(new Color(255, 255, 255, 6));
         g2.setStroke(new BasicStroke(1));
         for (int x = 0; x < w; x += 40) g2.drawLine(x, 0, x, h);
         for (int y = 0; y < h; y += 40) g2.drawLine(0, y, w, y);
 
-        // Corner decorations
+        
         drawCornerOrn(g2, 40, 40, 0);
         drawCornerOrn(g2, w - 40, 40, 90);
         drawCornerOrn(g2, w - 40, h - 40, 180);

@@ -1,24 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package kelompok11.turnbaserpg.game.services;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import kelompok11.turnbaserpg.enums.BattleResult;
-import kelompok11.turnbaserpg.enums.Difficulty;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
+import kelompok11.turnbaserpg.model.enums.Difficulty;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.model.skill.Skill;
 import kelompok11.turnbaserpg.utils.GameConstants;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- * Manages dungeon floor progression logic. This service handles enemy
- * generation, difficulty scaling, boss floors, and wave logic.
- */
 public class DungeonService {
 
     private final Player player;
@@ -31,7 +24,7 @@ public class DungeonService {
         this.player = player;
     }
 
-    // Dungeon Initialisation
+    
     public void initDungeon() {
         int pending = player.getPendingReplayFloor();
         if (pending > 0) {
@@ -48,7 +41,7 @@ public class DungeonService {
         }
     }
 
-    // Floor State Queries (called by DungeonController)
+    
     public boolean hasMoreFloors() {
         return player.getCurrentFloor() <= GameConstants.MAX_FLOOR;
     }
@@ -78,7 +71,7 @@ public class DungeonService {
         return isBossFloor ? 1 : WAVES_PER_FLOOR;
     }
 
-    // Enemy Generation
+    
     public Enemy generateEnemy(Difficulty difficulty) {
         String[] easyEnemies = {"Goblin", "Slime", "Wolf"};
         String[] normalEnemies = {"Troll", "Orc", "Skeleton"};
@@ -138,7 +131,7 @@ public class DungeonService {
         enemy.getStats().setBaseDefense(def);
     }
 
-    // Floor Progression Events
+    
     public List<DungeonEvent> buildFloorStartEvents(int floor, boolean isBossFloor, Difficulty difficulty) {
         List<DungeonEvent> events = new ArrayList<>();
         events.add(new DungeonEvent(DungeonEvent.Type.FLOOR_START,
@@ -150,9 +143,7 @@ public class DungeonService {
         return events;
     }
 
-    /**
-     * Builds events for a wave header. Call before each wave's battle.
-     */
+    
     public List<DungeonEvent> buildWaveStartEvents(int wave, int totalWaves, Enemy enemy, boolean isBossFloor) {
         List<DungeonEvent> events = new ArrayList<>();
         if (isBossFloor) {
@@ -165,7 +156,7 @@ public class DungeonService {
         return events;
     }
 
-    // Post-Battle & Rewards
+    
     public FloorOutcome processBattleResult(BattleResult result) {
         List<DungeonEvent> events = new ArrayList<>();
 
@@ -182,10 +173,7 @@ public class DungeonService {
         return new FloorOutcome(floorContinues, events);
     }
 
-    /**
-     * Grants a skill reward if the floor milestone is reached and the player
-     * has room for more skills.
-     */
+    
     public List<DungeonEvent> applySkillReward(int floor) {
         List<DungeonEvent> events = new ArrayList<>();
 
@@ -203,13 +191,10 @@ public class DungeonService {
         return events;
     }
 
-    /**
-     * Advances the player's floor counter by one. Returns events if the dungeon
-     * has been completed.
-     */
+    
     public List<DungeonEvent> advanceFloor() {
         int cleared = player.getCurrentFloor();
-        // Track the highest floor the player has completed
+        
         if (cleared > player.getHighestClearedFloor()) {
             player.setHighestClearedFloor(cleared);
         }
@@ -231,10 +216,8 @@ public class DungeonService {
         return player;
     }
 
-    // Inner result type
-    /**
-     * Carries the outcome of processing a single battle result for a wave.
-     */
+    
+    
     public static class FloorOutcome {
 
         private final boolean waveCleared;

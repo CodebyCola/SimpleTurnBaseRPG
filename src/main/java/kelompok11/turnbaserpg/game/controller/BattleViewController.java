@@ -7,10 +7,9 @@ import kelompok11.turnbaserpg.model.skill.Skill;
 
 import java.util.List;
 
-// Controller for BattlePanel — exposes stat snapshots so the view never reads model fields directly
 public class BattleViewController {
 
-    // Snapshot of player stats needed for the battle HUD
+    
     public record PlayerBattleSnapshot(
         String name,
         String role,
@@ -19,21 +18,21 @@ public class BattleViewController {
         int currentMana, int maxMana
     ) {}
 
-    // Snapshot of enemy stats needed for the battle HUD
+    
     public record EnemyBattleSnapshot(
         String name,
         int currentHp,
         int maxHp
     ) {}
 
-    // Skill info needed to render skill sub-buttons
+    
     public record SkillInfo(
         String name,
         int manaCost,
         int currentCooldown
     ) {}
 
-    // Item info needed to render item sub-buttons
+    
     public record ItemInfo(
         String name,
         int quantity
@@ -47,7 +46,7 @@ public class BattleViewController {
         this.enemy  = enemy;
     }
 
-    // Returns current player stat snapshot for HUD refresh
+    
     public PlayerBattleSnapshot getPlayerSnapshot() {
         if (player == null) return null;
         return new PlayerBattleSnapshot(
@@ -61,7 +60,7 @@ public class BattleViewController {
         );
     }
 
-    // Returns current enemy stat snapshot for HUD refresh
+    
     public EnemyBattleSnapshot getEnemySnapshot() {
         if (enemy == null) return null;
         return new EnemyBattleSnapshot(
@@ -71,7 +70,7 @@ public class BattleViewController {
         );
     }
 
-    // Returns skill list info for building skill sub-panel
+    
     public List<SkillInfo> getSkillInfoList() {
         if (player == null) return List.of();
         return player.getUnlockedSkills().stream()
@@ -79,7 +78,7 @@ public class BattleViewController {
             .toList();
     }
 
-    // Returns item list info for building item sub-panel
+    
     public List<ItemInfo> getItemInfoList() {
         if (player == null) return List.of();
         return player.getInventory().getSlots().stream()
@@ -87,13 +86,13 @@ public class BattleViewController {
             .toList();
     }
 
-    // Returns current mana for skill availability check
+    
     public int getPlayerCurrentMana() {
         if (player == null) return 0;
         return player.getStats().getCurrentMana();
     }
 
-    // Returns skill mana cost by index for availability check
+    
     public int getSkillManaCost(int index) {
         if (player == null) return Integer.MAX_VALUE;
         List<Skill> skills = player.getUnlockedSkills();
@@ -101,7 +100,7 @@ public class BattleViewController {
         return skills.get(index).getManaCost();
     }
 
-    // Returns skill cooldown by index for availability check
+    
     public int getSkillCooldown(int index) {
         if (player == null) return 0;
         List<Skill> skills = player.getUnlockedSkills();

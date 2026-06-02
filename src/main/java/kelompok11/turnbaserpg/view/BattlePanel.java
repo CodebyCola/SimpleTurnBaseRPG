@@ -5,33 +5,32 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.util.List;
 
-import kelompok11.turnbaserpg.enums.BattleResult;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
 import kelompok11.turnbaserpg.game.controller.BattleController;
 import kelompok11.turnbaserpg.game.controller.BattleViewController;
 import kelompok11.turnbaserpg.game.services.BattleEvent;
 import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 
-// BattlePanel — tampilan pertarungan player vs enemy.
 public class BattlePanel extends JPanel {
 
     private BattleController battleController;
-    // Controller for stat snapshots — no direct model access from this view
+    
     private final BattleViewController viewController = new BattleViewController();
     private BattleResult lastResult;
 
-    // Callback saat battle selesai
+    
     private final Runnable onBattleEnd;
 
-    // Stat bars — VS header
+    
     private RPGComponents.StatBar playerHpBar, playerMpBar, enemyHpBar;
     private JLabel playerNameLbl, playerLevelLbl, enemyNameLbl, enemyHpLabel;
 
-    // Battle log
+    
     private JTextPane battleLog;
     private StyledDocument logDoc;
 
-    // Action buttons
+    
     private RPGComponents.RPGButton attackBtn, defendBtn, skillBtn, itemBtn, escapeBtn;
     private JPanel skillSubPanel, itemSubPanel;
     private boolean skillSubVisible = false;
@@ -44,15 +43,15 @@ public class BattlePanel extends JPanel {
         buildUI();
     }
 
-    // ======================================================
-    // Start / Reset battle
-    // ======================================================
+    
+    
+    
     public void startBattle(Player player, Enemy enemy) {
-        // Give the view controller the context — view never holds model refs directly
+        
         viewController.setContext(player, enemy);
         this.lastResult = null;
 
-        // Reset UI
+        
         clearLog();
         skillSubVisible = false;
         itemSubVisible  = false;
@@ -62,16 +61,16 @@ public class BattlePanel extends JPanel {
         refreshPlayerStats();
         refreshEnemyStats();
 
-        // Wire battle controller
+        
         battleController = new BattleController(player, enemy, this::handleEvents);
         battleController.startBattle();
     }
 
     public BattleResult getLastResult() { return lastResult; }
 
-    // ======================================================
-    // Event handler dari BattleController
-    // ======================================================
+    
+    
+    
     private void handleEvents(List<BattleEvent> events) {
         SwingUtilities.invokeLater(() -> {
             for (BattleEvent e : events) appendLog(e);
@@ -90,9 +89,9 @@ public class BattlePanel extends JPanel {
         });
     }
 
-    // ======================================================
-    // UI Building
-    // ======================================================
+    
+    
+    
     private void buildUI() {
         add(buildVsBar(),      BorderLayout.NORTH);
 
@@ -113,7 +112,7 @@ public class BattlePanel extends JPanel {
             BorderFactory.createEmptyBorder(14, 20, 14, 20)
         ));
 
-        // --- Player side ---
+        
         JPanel playerSide = new JPanel();
         playerSide.setOpaque(false);
         playerSide.setLayout(new BoxLayout(playerSide, BoxLayout.Y_AXIS));
@@ -138,12 +137,12 @@ public class BattlePanel extends JPanel {
         playerSide.add(Box.createVerticalStrut(4));
         playerSide.add(playerMpBar);
 
-        // --- VS ---
+        
         JLabel vs = new JLabel("VS", SwingConstants.CENTER);
         vs.setFont(new Font("Georgia", Font.BOLD, 26));
         vs.setForeground(RPGTheme.ACCENT_EMBER);
 
-        // --- Enemy side ---
+        
         JPanel enemySide = new JPanel();
         enemySide.setOpaque(false);
         enemySide.setLayout(new BoxLayout(enemySide, BoxLayout.Y_AXIS));
@@ -285,9 +284,9 @@ public class BattlePanel extends JPanel {
         return btn;
     }
 
-    // ======================================================
-    // Populate skill / item sub-panels via controller
-    // ======================================================
+    
+    
+    
     private void populateSkillPanel() {
         skillSubPanel.removeAll();
 
@@ -358,9 +357,9 @@ public class BattlePanel extends JPanel {
         return l;
     }
 
-    // ======================================================
-    // Action dispatch
-    // ======================================================
+    
+    
+    
     private void doAction(int action, int secondary) {
         if (battleController == null || battleController.isBattleOver()) return;
         setActionsEnabled(false);
@@ -387,9 +386,9 @@ public class BattlePanel extends JPanel {
         escapeBtn.setEnabled(enabled);
     }
 
-    // ======================================================
-    // Stat refresh — all data via controller snapshots
-    // ======================================================
+    
+    
+    
     private void refreshPlayerStats() {
         BattleViewController.PlayerBattleSnapshot snap = viewController.getPlayerSnapshot();
         if (snap == null) return;
@@ -407,9 +406,9 @@ public class BattlePanel extends JPanel {
         enemyHpBar.setValues(snap.currentHp(), snap.maxHp());
     }
 
-    // ======================================================
-    // Battle log
-    // ======================================================
+    
+    
+    
     private void appendLog(BattleEvent event) {
         try {
             Style style = logDoc.addStyle("s", null);
@@ -417,12 +416,12 @@ public class BattlePanel extends JPanel {
             StyleConstants.setBold(style, isBold(event.getType()));
             logDoc.insertString(logDoc.getLength(), event.getMessage() + "\n", style);
             battleLog.setCaretPosition(logDoc.getLength());
-        } catch (BadLocationException e) { /* ignore */ }
+        } catch (BadLocationException e) {  }
     }
 
     private void clearLog() {
         try { logDoc.remove(0, logDoc.getLength()); }
-        catch (BadLocationException e) { /* ignore */ }
+        catch (BadLocationException e) {  }
     }
 
     private Color colorFor(BattleEvent.Type type) {

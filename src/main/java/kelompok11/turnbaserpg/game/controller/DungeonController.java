@@ -2,8 +2,8 @@ package kelompok11.turnbaserpg.game.controller;
 
 import java.util.List;
 
-import kelompok11.turnbaserpg.enums.BattleResult;
-import kelompok11.turnbaserpg.enums.Difficulty;
+import kelompok11.turnbaserpg.model.enums.BattleResult;
+import kelompok11.turnbaserpg.model.enums.Difficulty;
 import kelompok11.turnbaserpg.game.services.BattleEvent;
 import kelompok11.turnbaserpg.game.services.DungeonEvent;
 import kelompok11.turnbaserpg.game.services.DungeonService;
@@ -11,15 +11,6 @@ import kelompok11.turnbaserpg.model.character.Enemy;
 import kelompok11.turnbaserpg.model.character.Player;
 import kelompok11.turnbaserpg.utils.GameLogger;
 
-/**
- * Controls dungeon floor progression.
- *
- * Sits between {@link DungeonService} (logic) and the view. The controller
- * drives the floor → wave → battle loop, delegates individual battles to a
- * {@link BattleController}, dispatches {@link DungeonEvent}s and
- * {@link BattleEvent}s to the view, and waits for the player's advance/retreat
- * decision between floors via {@link #advanceDecision(boolean)}.
- */
 public class DungeonController {
 
     @FunctionalInterface
@@ -70,7 +61,7 @@ public class DungeonController {
         this.advancePrompt = advancePrompt;
     }
 
-    // Dungeon Entry
+    
     public void enterDungeon() {
         dungeonService.initDungeon();
         dungeonRunning = true;
@@ -91,7 +82,7 @@ public class DungeonController {
         runNextFloor();
     }
 
-    // Floor Loop
+    
     private void runNextFloor() {
         if (!dungeonService.hasMoreFloors()) {
             dungeonRunning = false;
@@ -111,10 +102,10 @@ public class DungeonController {
             return;
         }
 
-        // Reward
+        
         dispatchDungeon(dungeonService.applySkillReward(floor));
 
-        // Advance counter; check for dungeon completion
+        
         List<DungeonEvent> advanceEvents = dungeonService.advanceFloor();
         dispatchDungeon(advanceEvents);
 
@@ -126,7 +117,7 @@ public class DungeonController {
             return;
         }
 
-        // Ask player whether to continue
+        
         waitingForAdvanceDecision = true;
         advancePrompt.promptAdvance(dungeonService.getCurrentFloor());
     }
@@ -158,7 +149,7 @@ public class DungeonController {
         return true;
     }
 
-    // Single Battle Delegation
+    
     private BattleResult runBattle(Enemy enemy) {
         Player player = dungeonService.getPlayer();
 
@@ -172,7 +163,7 @@ public class DungeonController {
         return battle.getResult();
     }
 
-    // Helpers
+    
     private void dispatchDungeon(List<DungeonEvent> events) {
         if (events != null && !events.isEmpty()) {
             dungeonListener.onDungeonEvents(events);

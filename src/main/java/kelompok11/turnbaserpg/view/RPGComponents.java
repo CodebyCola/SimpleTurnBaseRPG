@@ -6,14 +6,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 
-/**
- * Reusable RPG-styled Swing components.
- */
 public class RPGComponents {
 
-    // =========================================================
-    // RPGButton — glowing dark-fantasy style button
-    // =========================================================
+    
+    
+    
     public static class RPGButton extends JButton {
 
         private Color baseColor;
@@ -56,22 +53,22 @@ public class RPGComponents {
             Color bg = pressed ? pressColor.darker() : (hovered ? RPGTheme.BG_LIGHT : RPGTheme.BG_MID);
             Color border = pressed ? pressColor : (hovered ? hoverColor : baseColor);
 
-            // Shadow glow when hovered
+            
             if (hovered) {
                 g2.setColor(new Color(border.getRed(), border.getGreen(), border.getBlue(), 60));
                 g2.fillRoundRect(-3, -3, w + 6, h + 6, 10, 10);
             }
 
-            // Background
+            
             g2.setColor(bg);
             g2.fillRoundRect(0, 0, w - 1, h - 1, 8, 8);
 
-            // Border
+            
             g2.setColor(border);
             g2.setStroke(new BasicStroke(hovered ? 1.5f : 1.0f));
             g2.drawRoundRect(0, 0, w - 1, h - 1, 8, 8);
 
-            // Top sheen
+            
             GradientPaint sheen = new GradientPaint(0, 0,
                 new Color(255, 255, 255, hovered ? 20 : 10), 0, h / 2,
                 new Color(255, 255, 255, 0));
@@ -80,7 +77,7 @@ public class RPGComponents {
 
             g2.dispose();
 
-            // Paint text
+            
             FontMetrics fm = g.getFontMetrics(getFont());
             int tx = (w - fm.stringWidth(getText())) / 2;
             int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
@@ -90,9 +87,9 @@ public class RPGComponents {
         }
     }
 
-    // =========================================================
-    // StatBar — colored progress bar (HP, Mana, EXP)
-    // =========================================================
+    
+    
+    
     public static class StatBar extends JPanel {
 
         private int current, max;
@@ -123,17 +120,17 @@ public class RPGComponents {
             int barH = h - 4;
             int barY = 2;
 
-            // Background track
+            
             g2.setColor(RPGTheme.BG_DARKEST);
             g2.fillRoundRect(0, barY, w - 1, barH, 6, 6);
             g2.setColor(RPGTheme.BORDER_DARK);
             g2.drawRoundRect(0, barY, w - 1, barH, 6, 6);
 
-            // Fill
+            
             double ratio = max > 0 ? (double) current / max : 0;
             int fillW = (int) ((w - 2) * Math.min(ratio, 1.0));
             if (fillW > 0) {
-                // Gradient fill
+                
                 GradientPaint gp = new GradientPaint(
                     1, barY + 1, barColor.brighter(),
                     1, barY + barH - 2, barColor.darker()
@@ -141,19 +138,19 @@ public class RPGComponents {
                 g2.setPaint(gp);
                 g2.fillRoundRect(1, barY + 1, fillW, barH - 2, 5, 5);
 
-                // Sheen
+                
                 g2.setColor(new Color(255, 255, 255, 40));
                 g2.fillRoundRect(1, barY + 1, fillW, (barH - 2) / 2, 5, 5);
             }
 
-            // Label text
+            
             String text = label + ": " + current + "/" + max;
             g2.setFont(RPGTheme.FONT_SMALL);
             FontMetrics fm = g2.getFontMetrics();
             int tx = (w - fm.stringWidth(text)) / 2;
             int ty = barY + (barH + fm.getAscent() - fm.getDescent()) / 2;
 
-            // Shadow
+            
             g2.setColor(new Color(0, 0, 0, 160));
             g2.drawString(text, tx + 1, ty + 1);
             g2.setColor(Color.WHITE);
@@ -163,9 +160,9 @@ public class RPGComponents {
         }
     }
 
-    // =========================================================
-    // DarkPanel — panel with custom dark background + optional border
-    // =========================================================
+    
+    
+    
     public static class DarkPanel extends JPanel {
 
         private Color bgColor;
@@ -197,9 +194,9 @@ public class RPGComponents {
         }
     }
 
-    // =========================================================
-    // GoldLabel — label with gold color shorthand
-    // =========================================================
+    
+    
+    
     public static JLabel goldLabel(String text, Font font) {
         JLabel lbl = new JLabel(text);
         lbl.setForeground(RPGTheme.TEXT_GOLD);
@@ -214,9 +211,9 @@ public class RPGComponents {
         return lbl;
     }
 
-    // =========================================================
-    // RPGTextField — dark themed text field
-    // =========================================================
+    
+    
+    
     public static class RPGTextField extends JTextField {
         public RPGTextField(int cols) {
             super(cols);
@@ -231,9 +228,9 @@ public class RPGComponents {
         }
     }
 
-    // =========================================================
-    // RPGPasswordField — dark themed password field
-    // =========================================================
+    
+    
+    
     public static class RPGPasswordField extends JPasswordField {
         public RPGPasswordField(int cols) {
             super(cols);
@@ -248,9 +245,9 @@ public class RPGComponents {
         }
     }
 
-    // =========================================================
-    // SeparatorLine — horizontal gold/dark divider
-    // =========================================================
+    
+    
+    
     public static class SeparatorLine extends JPanel {
         private final Color color;
         public SeparatorLine(Color color) {

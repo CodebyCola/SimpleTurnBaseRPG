@@ -1,44 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package kelompok11.turnbaserpg.model.skill;
 
-import kelompok11.turnbaserpg.enums.SkillType;
+import kelompok11.turnbaserpg.model.enums.SkillType;
 import kelompok11.turnbaserpg.model.character.Character;
 import kelompok11.turnbaserpg.utils.GameConstants;
 
-/**
- *
- * @author Pongo
- */
 public class DragonFury extends Skill {
 
     public DragonFury() {
         super("Dragon Fury", "Release destructive dragon power", 90, 40,
-                GameConstants.SKILL_COOLDOWN_ULTIMATE, SkillType.ATTACK
-        );
+                GameConstants.SKILL_COOLDOWN_ULTIMATE, SkillType.ATTACK);
     }
 
+    @Override
     public boolean cast(Character caster, Character target) {
-
-        if (currentCoolDown > 0) {
-            System.out.println("Skill is on cooldown!");
-            return false;
-        }
-
-        if (caster.getStats().getCurrentMana() < manaCost) {
-            System.out.println("Not enough mana!");
-            return false;
-        }
-
-        int totalDamage = effectValue + caster.getStats().getTotalMagic();
-        target.takeDamage(totalDamage);
-        caster.getStats().decreaseCurrentMana(manaCost);
-        currentCoolDown = cooldown;
-        System.out.println("player " + caster.getCharacterName() + " Casting " + this.name);
-        System.out.println(target.getCharacterName() + " taking " + totalDamage + " damage");
+        if (!canCast(caster)) return false;
+        target.takeDamage(effectValue + caster.getStats().getTotalMagic());
+        applyManaAndCooldown(caster);
         return true;
     }
-
 }
