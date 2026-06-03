@@ -290,7 +290,7 @@ public class MainMenuPanel extends JPanel {
 
         // Dead-status warning label (hidden when alive)
         deadStatusLabel = RPGComponents.label(
-                "⚠  You are DEAD — use a potion to recover!", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
+                "  You are DEAD — use a potion to recover!", RPGTheme.ACCENT_EMBER, RPGTheme.FONT_SMALL);
         deadStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         deadStatusLabel.setVisible(false);
         gbc.gridy = 2;
@@ -401,44 +401,44 @@ public class MainMenuPanel extends JPanel {
         grid.setOpaque(false);
 
         // HP
-        grid.add(statLabel("❤  HP"));
+        grid.add(statLabel("  HP"));
         grid.add(statValue(s.currentHp() + " / " + s.maxHp(), RPGTheme.HP_RED));
 
         // Attack
-        grid.add(statLabel("⚔  Attack"));
+        grid.add(statLabel("  Attack"));
         grid.add(statValueWithBonus(s.baseAttack(), s.totalAttack(), RPGTheme.ACCENT_EMBER));
 
         // Defense
-        grid.add(statLabel("🛡  Defense"));
+        grid.add(statLabel("  Defense"));
         grid.add(statValueWithBonus(s.baseDefense(), s.totalDefense(), RPGTheme.ACCENT_SILVER));
 
         // Magic
-        grid.add(statLabel("✨  Magic"));
+        grid.add(statLabel("  Magic"));
         grid.add(statValueWithBonus(s.baseMagic(), s.totalMagic(), RPGTheme.EXP_PURPLE));
 
         // Mana
-        grid.add(statLabel("💧  Mana"));
+        grid.add(statLabel("  Mana"));
         grid.add(statValue(s.currentMana() + " / " + s.baseMana(), RPGTheme.MANA_BLUE));
 
         // EXP
-        grid.add(statLabel("⭐  EXP"));
+        grid.add(statLabel("  EXP"));
         grid.add(statValue(s.currentExp() + " / " + s.maxExp(), RPGTheme.EXP_PURPLE));
 
         // Gold
-        grid.add(statLabel("💰  Gold"));
+        grid.add(statLabel("  Gold"));
         grid.add(statValue(s.gold() + " G", RPGTheme.ACCENT_GOLD));
 
         // Floor
-        grid.add(statLabel("🗺  Current Floor"));
+        grid.add(statLabel("  Current Floor"));
         grid.add(statValue(String.valueOf(s.floor()), RPGTheme.TEXT_PRIMARY));
 
         // Highest cleared floor
-        grid.add(statLabel("🏆  Highest Cleared"));
+        grid.add(statLabel("  Highest Cleared"));
         grid.add(statValue(s.highestClearedFloor() + " / 100", RPGTheme.ACCENT_GOLD));
 
         // Dead status
         if (s.isDead()) {
-            grid.add(statLabel("💀  Status"));
+            grid.add(statLabel("  Status"));
             grid.add(statValue("DEAD — use a potion!", RPGTheme.ACCENT_EMBER));
         }
 
@@ -782,7 +782,7 @@ public class MainMenuPanel extends JPanel {
         ));
         JLabel titleLbl = RPGComponents.goldLabel(title, RPGTheme.FONT_SUB);
         header.add(titleLbl, BorderLayout.WEST);
-        RPGComponents.RPGButton closeBtn = new RPGComponents.RPGButton("✕", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARKEST);
+        RPGComponents.RPGButton closeBtn = new RPGComponents.RPGButton("X", RPGTheme.ACCENT_EMBER, RPGTheme.BG_DARKEST);
         closeBtn.setPreferredSize(new Dimension(34, 28));
         closeBtn.addActionListener(e -> d.dispose());
         header.add(closeBtn, BorderLayout.EAST);

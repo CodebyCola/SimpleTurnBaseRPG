@@ -225,7 +225,7 @@ public class LoginPanel extends JPanel {
         p.add(fieldRow("Password", loginPassword));
         p.add(Box.createVerticalStrut(20));
 
-        RPGComponents.RPGButton loginBtn = new RPGComponents.RPGButton("⚔  Enter the Realm");
+        RPGComponents.RPGButton loginBtn = new RPGComponents.RPGButton("  Enter the Realm");
         loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
         loginBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
         loginBtn.addActionListener(e -> doLogin());
